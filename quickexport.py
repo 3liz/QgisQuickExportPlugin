@@ -27,7 +27,7 @@ from qgis.gui import QgsMessageBar
 # Initialize Qt resources from file resources.py
 import resources
 import os.path
-
+from functools import partial
 
 class QuickExport:
 
@@ -51,65 +51,36 @@ class QuickExport:
 
         # Add Quick Export toolbar
         self.toolbar = self.iface.addToolBar(u'Quick Export');
+
+        # Add toolbar buttons
+        ###
+        # CSV
         self.exportAsCsvAction = QAction(
             QIcon(os.path.dirname(__file__) +"/icons/export-csv.svg"),
             QApplication.translate("quickExport", u"Export table as CSV"),
             self.iface.mainWindow()
         )
-        self.exportAsCsvAction.triggered.connect(self.export_as_csv)
         self.toolbar.addAction(self.exportAsCsvAction)
         self.toolbar.setObjectName("quickExportAsCsv");
 
+        # HTML
+        self.exportAsHtmlAction = QAction(
+            QIcon(os.path.dirname(__file__) +"/icons/export-html.svg"),
+            QApplication.translate("quickExport", u"Export table as HTML"),
+            self.iface.mainWindow()
+        )
+        self.toolbar.addAction(self.exportAsHtmlAction)
+        self.toolbar.setObjectName("quickExportAsHtml");
 
-
-    def export_as_csv(self):
-        '''
-        Export the attribute table of the selected
-        vector layer
-        '''
-        # Get the active layer
-        layer = self.iface.activeLayer()
-        msg= None
-
-        # Check if the layer is suitable for data export
-        if layer and layer.type() == QgsMapLayer.VectorLayer and hasattr(layer, 'providerType'):
-
-            # Ask the user to choose the path
-            ePath = self.chooseExportFilePath('csv')
-            # Do the export
-            if ePath:
-                provider = layer.dataProvider()
-                writer = QgsVectorFileWriter.writeAsVectorFormat(
-                    layer,
-                    ePath,
-                    provider.encoding(),
-                    layer.crs(),
-                    "CSV",
-                    layer.selectedFeatureCount(),
-                    None,
-                    [],
-                    ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
-                )
-
-                if writer == QgsVectorFileWriter.NoError:
-                    msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
-                    status = QgsMessageBar.INFO
-                else:
-                    msg = QApplication.translate("quickExport", "An error occured during layer export.")
-                    status = QgsMessageBar.CRITICAL
-
-        else:
-            msg = QApplication.translate("quickExport", "Please select a vector layer first.")
-            status = QgsMessageBar.WARNING
-
-        # Display status in the message bar
-        if msg:
-            self.iface.messageBar().pushMessage(
-                QApplication.translate("quickExport", "Quick Export Plugin"),
-                msg,
-                status,
-                3
-            )
+        # Connect each button to corresponding slot
+        self.exportButtons = {
+            'csv': {'action' : self.exportAsCsvAction},
+            'html': {'action' : self.exportAsHtmlAction}
+        }
+        for key, item in self.exportButtons.items():
+            action = item['action']
+            slot = partial(self.exportLayer, key)
+            action.triggered.connect(slot)
 
 
     def chooseExportFilePath(self, etype='csv'):
@@ -161,6 +132,77 @@ class QuickExport:
 
         return ePath
 
+
+
+    def exportLayer(self, etype='csv'):
+        '''
+        Export the attribute table of the selected
+        vector layer to the chose file type
+        '''
+        # Get the active layer
+        layer = self.iface.activeLayer()
+        msg= None
+
+        # Check if the layer is suitable for data export
+        if layer and layer.type() == QgsMapLayer.VectorLayer and hasattr(layer, 'providerType'):
+
+            # Ask the user to choose the path
+            ePath = self.chooseExportFilePath(etype)
+
+            # Do the export
+            if ePath:
+                if etype == 'csv':
+                    msg, status = self.exportLayerToCsv(layer, ePath)
+                elif etype == 'html':
+                    msg, status = self.exportLayerToHtml(layer, ePath)
+                #~ elif etype == 'pdf':
+                    #~ msg = exportLayerToHtml()
+
+        else:
+            msg = QApplication.translate("quickExport", "Please select a vector layer first.")
+            status = QgsMessageBar.WARNING
+
+        # Display status in the message bar
+        if msg:
+            self.iface.messageBar().pushMessage(
+                QApplication.translate("quickExport", "Quick Export Plugin"),
+                msg,
+                status,
+                3
+            )
+
+    def exportLayerToCsv(self, layer, ePath):
+        '''
+        Exports the layer to CSV
+        '''
+        provider = layer.dataProvider()
+        writer = QgsVectorFileWriter.writeAsVectorFormat(
+            layer,
+            ePath,
+            provider.encoding(),
+            layer.crs(),
+            "CSV",
+            layer.selectedFeatureCount(),
+            None,
+            [],
+            ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
+        )
+
+        if writer == QgsVectorFileWriter.NoError:
+            msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
+            status = QgsMessageBar.INFO
+        else:
+            msg = QApplication.translate("quickExport", "An error occured during layer export.")
+            status = QgsMessageBar.CRITICAL
+
+        return msg, status
+
+
+    def exportLayerToHtml(self, layer, ePath):
+        '''
+        Exports the layer to HTML
+        '''
+        return msg, status
 
     def unload(self):
         # Remove the plugin menu item and icon
