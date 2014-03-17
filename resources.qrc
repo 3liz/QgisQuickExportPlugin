@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/quickexport" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
