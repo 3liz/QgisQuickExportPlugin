@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:svg="http://www.w3.org/2000/svg" id="svg3491" viewBox="0 0 66.317 68.03" version="1.1">
+  <defs id="defs3493">
+    <filter id="filter4402-8" color-interpolation-filters="sRGB">
+      <feGaussianBlur id="feGaussianBlur4404-4" stdDeviation="1.2625"/>
+    </filter>
+    <linearGradient id="linearGradient3404" x1="298.48" xlink:href="#linearGradient3928-8-0" gradientUnits="userSpaceOnUse" y1="238.13" gradientTransform="matrix(.53078 0 0 .52644 -45.351 -339.55)" x2="299.9" y2="150.17"/>
+    <linearGradient id="linearGradient3928-8-0">
+      <stop id="stop3930-2-5" stop-color="#7c7c7c" offset="0"/>
+      <stop id="stop3932-0-0" stop-color="#e6e3e3" offset="1"/>
+    </linearGradient>
+    <filter id="filter4396-9" height="1.215" width="1.0832" y="-.1075" x="-.041613" color-interpolation-filters="sRGB">
+      <feGaussianBlur id="feGaussianBlur4398-7" stdDeviation="0.53749999"/>
+    </filter>
+    <linearGradient id="linearGradient3406" x1="326.01" xlink:href="#linearGradient3928-8-0" gradientUnits="userSpaceOnUse" y1="161.52" gradientTransform="matrix(.52980 0 0 .52980 -45.012 -340.03)" x2="310.68" y2="177.41"/>
+  </defs>
+  <g id="layer1" transform="translate(-401.13 -292.6)">
+    <g id="g3384" transform="translate(320.79 555.76)">
+      <path id="path3386" opacity=".6" stroke-linejoin="round" style="color:#000000" d="m97.628-255.14v56h45v-40.108l-16.023-15.892z" stroke-dashoffset="117.54" filter="url(#filter4402-8)" stroke="#000" stroke-linecap="round" stroke-width="2"/>
+      <path id="path3388" stroke-linejoin="round" style="color:#000000" d="m90.628-262.14v56h45v-40.108l-16.023-15.892z" stroke-dashoffset="117.54" stroke="#000" stroke-linecap="round" stroke-width="2" fill="url(#linearGradient3404)"/>
+      <rect id="rect3390" style="color:#000000" rx="1" ry="1" height="12" filter="url(#filter4396-9)" width="31" y="-251.14" x="81.628"/>
+      <rect id="rect3392" style="color:#000000" rx="1" ry="1" height="12" width="31" y="-251.14" x="81.628" fill="#00f"/>
+      <path id="path3394" stroke-linejoin="round" style="color:#000000" d="m135.63-246.14-15.989-15.989v15.989h15.989z" stroke-dashoffset="117.54" stroke="#000" stroke-linecap="round" stroke-width="2" fill="url(#linearGradient3406)"/>
+      <text id="text3396" style="word-spacing:0px;letter-spacing:0px;text-anchor:middle;text-align:center" font-family="Sans" xml:space="preserve" transform="scale(.89596 1.1161)" font-size="10.208px" y="-215.91681" x="108.07487" font-weight="bold" line-height="125%" fill="#ffffff">
+        <tspan id="tspan3398" y="-215.91681" x="108.07487">HTML</tspan>
+      </text>
+      <text id="text3400" style="word-spacing:0px;letter-spacing:0px;text-anchor:middle;text-align:center" font-family="DejaVu Sans" xml:space="preserve" font-size="20.934px" line-height="125%" y="-217.14209" x="113.12781" font-weight="bold" fill="#0000ff">
+        <tspan id="tspan3402" font-family="DejaVu Sans" y="-217.14209" x="113.12781" font-weight="bold" fill="#0000ff">&lt;/&gt;</tspan>
+      </text>
+    </g>
+  </g>
+  <metadata>
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title>file-icon-html</dc:title>
+        <dc:date>2012-04-29T22:58:42</dc:date>
+        <dc:description>inspired by surfing on the web</dc:description>
+        <dc:source>http://openclipart.org/detail/169751/file-icon-html-by-jabon</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>jabon</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>clip art</rdf:li>
+            <rdf:li>clipart</rdf:li>
+            <rdf:li>file</rdf:li>
+            <rdf:li>html</rdf:li>
+            <rdf:li>icon</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>

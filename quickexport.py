@@ -23,10 +23,9 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
+from qgis.gui import QgsMessageBar
 # Initialize Qt resources from file resources.py
-import resources_rc
-# Import the code for the dialog
-from quickexportdialog import QuickExportDialog
+import resources
 import os.path
 
 
@@ -48,34 +47,122 @@ class QuickExport:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
-        # Create the dialog (after translation) and keep reference
-        self.dlg = QuickExportDialog()
-
     def initGui(self):
-        # Create action that will start plugin configuration
-        self.action = QAction(
-            QIcon(":/plugins/quickexport/icon.png"),
-            u"Quick Export", self.iface.mainWindow())
-        # connect the action to the run method
-        self.action.triggered.connect(self.run)
 
-        # Add toolbar button and menu item
-        self.iface.addToolBarIcon(self.action)
-        self.iface.addPluginToMenu(u"&Quick Export", self.action)
+        # Add Quick Export toolbar
+        self.toolbar = self.iface.addToolBar(u'Quick Export');
+        self.exportAsCsvAction = QAction(
+            QIcon(os.path.dirname(__file__) +"/icons/export-csv.svg"),
+            QApplication.translate("quickExport", u"Export table as CSV"),
+            self.iface.mainWindow()
+        )
+        self.exportAsCsvAction.triggered.connect(self.export_as_csv)
+        self.toolbar.addAction(self.exportAsCsvAction)
+        self.toolbar.setObjectName("quickExportAsCsv");
+
+
+
+    def export_as_csv(self):
+        '''
+        Export the attribute table of the selected
+        vector layer
+        '''
+        # Get the active layer
+        layer = self.iface.activeLayer()
+        msg= None
+
+        # Check if the layer is suitable for data export
+        if layer and layer.type() == QgsMapLayer.VectorLayer and hasattr(layer, 'providerType'):
+
+            # Ask the user to choose the path
+            ePath = self.chooseExportFilePath('csv')
+            # Do the export
+            if ePath:
+                provider = layer.dataProvider()
+                writer = QgsVectorFileWriter.writeAsVectorFormat(
+                    layer,
+                    ePath,
+                    provider.encoding(),
+                    layer.crs(),
+                    "CSV",
+                    layer.selectedFeatureCount(),
+                    None,
+                    [],
+                    ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
+                )
+
+                if writer == QgsVectorFileWriter.NoError:
+                    msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
+                    status = QgsMessageBar.INFO
+                else:
+                    msg = QApplication.translate("quickExport", "An error occured during layer export.")
+                    status = QgsMessageBar.CRITICAL
+
+        else:
+            msg = QApplication.translate("quickExport", "Please select a vector layer first.")
+            status = QgsMessageBar.WARNING
+
+        # Display status in the message bar
+        if msg:
+            self.iface.messageBar().pushMessage(
+                QApplication.translate("quickExport", "Quick Export Plugin"),
+                msg,
+                status,
+                3
+            )
+
+
+    def chooseExportFilePath(self, etype='csv'):
+        '''
+        Method to allow the user to choose a file path
+        to store the exported attribute table
+        '''
+
+        # Get data corresponding to chosen file type
+        etypeDic = {
+            'csv': {'fileType': 'CSV (*.csv *.txt)', 'lastFileSetting': 'lastExportedCsvFile'},
+            'html': {'fileType': 'HTML (*.html *.htm)', 'lastFileSetting': 'lastExportedHtmlFile'},
+            'pdf': {'fileType': 'PDF (*.pdf)', 'lastFileSetting': 'lastExportedPdfFile'}
+        }
+
+        # Get last exported file path
+        s = QSettings()
+        lastFile = s.value(
+            "quickExport/%s" % etypeDic[etype]['lastFileSetting'],
+            '',
+            type=str
+        )
+
+        # Let the user choose new file path
+        ePath = QFileDialog.getSaveFileName (
+            None,
+            QApplication.translate("quickExport", "Please choose the destination file path."),
+            lastFile,
+            etypeDic[etype]['fileType']
+        )
+        if not ePath:
+            self.iface.messageBar().pushMessage(
+                QApplication.translate("quickExport", "Quick Export Plugin"),
+                QApplication.translate("quickExport", "Export has been canceled"),
+                QgsMessageBar.INFO,
+                3
+            )
+            return None
+
+        # Delete file if exists (question already asked above)
+        if os.path.exists(unicode(ePath)):
+            os.remove(unicode(ePath))
+
+        # Save file path in QGIS settings
+        s.setValue(
+            "quickExport/%s" % etypeDic[etype]['lastFileSetting'],
+            str(ePath)
+        )
+
+        return ePath
+
 
     def unload(self):
         # Remove the plugin menu item and icon
-        self.iface.removePluginMenu(u"&Quick Export", self.action)
-        self.iface.removeToolBarIcon(self.action)
+        self.iface.mainWindow().removeToolBar(self.toolbar)
 
-    # run method that performs all the real work
-    def run(self):
-        # show the dialog
-        self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result == 1:
-            # do something useful (delete the line containing pass and
-            # substitute with your code)
-            pass
