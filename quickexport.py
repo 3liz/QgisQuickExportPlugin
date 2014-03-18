@@ -74,7 +74,7 @@ class QuickExport:
         ###
         # CSV
         self.exportToCsvAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-csv.svg"),
+            QIcon(os.path.dirname(__file__) +"/icons/export-csv.png"),
             QApplication.translate("quickExport", u"Export table as CSV"),
             self.iface.mainWindow()
         )
@@ -83,7 +83,7 @@ class QuickExport:
 
         # HTML
         self.exportToHtmlAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-html.svg"),
+            QIcon(os.path.dirname(__file__) +"/icons/export-html.png"),
             QApplication.translate("quickExport", u"Export table as HTML"),
             self.iface.mainWindow()
         )
@@ -92,7 +92,7 @@ class QuickExport:
 
         # PDF
         self.exportToPdfAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-pdf.svg"),
+            QIcon(os.path.dirname(__file__) +"/icons/export-pdf.png"),
             QApplication.translate("quickExport", u"Export table as PDF"),
             self.iface.mainWindow()
         )
@@ -101,7 +101,7 @@ class QuickExport:
 
         # Printer
         self.exportToPrinterAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-pdf.svg"),
+            QIcon(os.path.dirname(__file__) +"/icons/export-printer.png"),
             QApplication.translate("quickExport", u"Export table to printer"),
             self.iface.mainWindow()
         )

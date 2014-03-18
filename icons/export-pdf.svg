@@ -1,68 +1,10 @@
 <?xml version="1.0"?>
-<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:svg="http://www.w3.org/2000/svg" id="svg3491" viewBox="0 0 66.323 68.03" version="1.1">
-  <defs id="defs3493">
-    <filter id="filter4402" color-interpolation-filters="sRGB">
-      <feGaussianBlur id="feGaussianBlur4404" stdDeviation="1.2625"/>
-    </filter>
-    <linearGradient id="linearGradient4592" x1="298.48" xlink:href="#linearGradient3928-8" gradientUnits="userSpaceOnUse" y1="238.13" gradientTransform="matrix(.53078 0 0 .52644 27.581 -339.55)" x2="299.9" y2="150.17"/>
-    <linearGradient id="linearGradient3928-8">
-      <stop id="stop3930-2" stop-color="#7c7c7c" offset="0"/>
-      <stop id="stop3932-0" stop-color="#e6e3e3" offset="1"/>
-    </linearGradient>
-    <filter id="filter4396" height="1.215" width="1.0832" y="-.1075" x="-.041613" color-interpolation-filters="sRGB">
-      <feGaussianBlur id="feGaussianBlur4398" stdDeviation="0.53749999"/>
-    </filter>
-    <linearGradient id="linearGradient4587" x1="326.01" xlink:href="#linearGradient3928-8" gradientUnits="userSpaceOnUse" y1="161.52" gradientTransform="matrix(.52980 0 0 .52980 27.92 -340.03)" x2="310.68" y2="177.41"/>
-  </defs>
-  <g id="layer1" transform="translate(-401.13 -292.62)">
-    <g id="g4612" transform="translate(247.86 555.77)">
-      <path id="path4560" opacity=".6" stroke-linejoin="round" style="color:#000000" d="m170.56-255.14v56h45v-40.108l-16.023-15.892z" stroke-dashoffset="117.54" filter="url(#filter4402)" stroke="#000" stroke-linecap="round" stroke-width="2"/>
-      <path id="path4562" stroke-linejoin="round" style="color:#000000" d="m163.56-262.14v56h45v-40.108l-16.023-15.892z" stroke-dashoffset="117.54" stroke="#000" stroke-linecap="round" stroke-width="2" fill="url(#linearGradient4592)"/>
-      <rect id="rect4564" style="color:#000000" rx="1" ry="1" height="12" filter="url(#filter4396)" width="31" y="-251.14" x="154.56"/>
-      <path id="path4607" stroke-linejoin="bevel" d="m478 161.25c-3.4777-1.3759 1.8547 33.049 15 34-12.991-2.2906-40.731-12.262-44 6 11.19-4.6489 20.083-26.734 29-40z" transform="translate(-284.37 -408.39)" stroke="#f00" stroke-width="3" fill="none"/>
-      <path id="path4568" stroke-linejoin="round" style="color:#000000" d="m208.56-246.14-15.989-15.989v15.989h15.989z" stroke-dashoffset="117.54" stroke="#000" stroke-linecap="round" stroke-width="2" fill="url(#linearGradient4587)"/>
-      <path id="path4610" stroke-linejoin="round" style="color:#000000" d="m163.56-262.14v56h45v-40.108l-16.023-15.892z" stroke-dashoffset="117.54" stroke="#000" stroke-linecap="round" stroke-width="2" fill="none"/>
-      <rect id="rect4566" style="color:#000000" rx="1" ry="1" height="12" width="31" y="-251.14" x="154.56" fill="#f00"/>
-      <text id="text4570" style="word-spacing:0px;letter-spacing:0px;text-anchor:middle;text-align:center" font-family="Sans" xml:space="preserve" transform="scale(.89596 1.1161)" font-size="10.208px" y="-215.91681" x="189.47539" font-weight="bold" line-height="125%" fill="#ffffff">
-        <tspan id="tspan4572" y="-215.91681" x="189.47539">PDF</tspan>
-      </text>
-    </g>
-  </g>
-  <metadata>
-    <rdf:RDF>
-      <cc:Work>
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
-        <dc:publisher>
-          <cc:Agent rdf:about="http://openclipart.org/">
-            <dc:title>Openclipart</dc:title>
-          </cc:Agent>
-        </dc:publisher>
-        <dc:title>file-icon-pdf</dc:title>
-        <dc:date>2012-04-29T22:56:35</dc:date>
-        <dc:description>inspired by surfing on the web</dc:description>
-        <dc:source>http://openclipart.org/detail/169750/file-icon-pdf-by-jabon</dc:source>
-        <dc:creator>
-          <cc:Agent>
-            <dc:title>jabon</dc:title>
-          </cc:Agent>
-        </dc:creator>
-        <dc:subject>
-          <rdf:Bag>
-            <rdf:li>clip art</rdf:li>
-            <rdf:li>clipart</rdf:li>
-            <rdf:li>file</rdf:li>
-            <rdf:li>icon</rdf:li>
-            <rdf:li>pdf</rdf:li>
-          </rdf:Bag>
-        </dc:subject>
-      </cc:Work>
-      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
-        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
-        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
-        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
-      </cc:License>
-    </rdf:RDF>
-  </metadata>
+<svg width="45" height="45" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with SVG-edit - http://svg-edit.googlecode.com/ -->
+
+ <g>
+  <title>Layer 1</title>
+  <rect fill="#7f0000" stroke="#4c4c4c" stroke-dasharray="null" stroke-linejoin="round" stroke-linecap="round" x="-0.001609" y="0.077659" width="45" height="45" id="svg_4" stroke-width="0"/>
+  <text fill="#ffffff" stroke="#000000" stroke-width="0" stroke-dasharray="null" stroke-linejoin="round" stroke-linecap="round" x="22.080461" y="31.576704" id="svg_56" font-size="24" font-family="Monospace" text-anchor="middle" xml:space="preserve" font-weight="bold">PDF</text>
+ </g>
 </svg>
