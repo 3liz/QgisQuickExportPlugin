@@ -30,6 +30,7 @@
                 $tbody
             </tbody>
         </table>
+        <span style="float:right;">$totalPages</span>
         </div>
 
         <footer>$dt_date - $date</footer>

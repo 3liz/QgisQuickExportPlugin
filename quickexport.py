@@ -251,7 +251,7 @@ class QuickExport:
         return msg, status
 
 
-    def exportLayerToHtml(self, layer, ePath=None):
+    def exportLayerToHtml(self, layer, ePath=None, cutPages=False):
         '''
         Exports the layer to HTML
         using a template and reading the data
@@ -306,7 +306,7 @@ class QuickExport:
             tbody+= '                    </td>\n'
             tbody+= '                </tr>\n\n'
             i+=1
-            if i == self.maxLinesPerPage:
+            if i == self.maxLinesPerPage and cutPages:
                 i = 0
                 tbody+= '</table>\n\n'
                 tbody+= '<span style="float:right;">Page %s</span>' % page
@@ -348,6 +348,7 @@ class QuickExport:
         data = data.replace('$dt_date', dt_date)
         data = data.replace('$date', date)
         data = data.replace('$style', style)
+        data = data.replace('$totalPages', "Page %s" % page)
 
         # File path
         if not ePath:
@@ -390,7 +391,7 @@ class QuickExport:
             # Create temporary HTML file
             tPath = temp.name
             tPath = '/tmp/test/sup.html'
-            msg, status = self.exportLayerToHtml(layer, tPath)
+            msg, status = self.exportLayerToHtml(layer, tPath, True)
 
             # Create a web view and fill it with the html file content
             web = QWebView()
