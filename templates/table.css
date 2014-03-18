@@ -1,0 +1,25 @@
+body {
+  font: normal small sans-serif;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 20px;
+}
+thead {
+  background: lightblue;
+}
+th, td {
+  padding: 0.25rem;
+  text-align: left;
+  border: 1px solid grey;
+}
+tbody tr:nth-child(odd) {
+  background: #eee;
+}
+
+
+dl { border: 3px double grey; padding: 0.5em; }
+dt { float: left; clear: left; width: 100px; text-align: right; font-weight: bold; color: blue; }
+dt:after { content: ":"; }
+dd { margin: 0 0 0 110px; padding: 0 0 0.5em 0; }
