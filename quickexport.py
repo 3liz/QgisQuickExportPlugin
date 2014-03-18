@@ -35,6 +35,7 @@ import locale
 import tempfile
 import sys
 import subprocess
+import apicompat
 
 class QuickExport:
 
@@ -59,7 +60,7 @@ class QuickExport:
         self.exportedFile = None
 
         # PDF print options
-        self.maxLinesPerPage = 30
+        self.maxLinesPerPage = 25
         self.maxAttributesBeforeSmallFontSize = 15
         self.orientation = QPrinter.Landscape
         self.pageSize = QPrinter.A4
