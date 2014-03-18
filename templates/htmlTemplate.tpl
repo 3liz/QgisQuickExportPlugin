@@ -6,6 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="author" content="Plugin QuickExport for QGIS 2+">
         <link rel="stylesheet" href="table.css" type="text/css" />
+        <style>$style</style>
 
     </head>
 

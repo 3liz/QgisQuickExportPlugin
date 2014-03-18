@@ -22,6 +22,7 @@
 # Import the PyQt and QGIS libraries
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.QtWebKit import *
 from qgis.core import *
 from qgis.gui import QgsMessageBar
 # Initialize Qt resources from file resources.py
@@ -31,8 +32,11 @@ from functools import partial
 import shutil
 import datetime
 import locale
+import tempfile
 
 class QuickExport:
+
+
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -50,6 +54,9 @@ class QuickExport:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        self.maxLinesPerPage = 30
+
+
     def initGui(self):
 
         # Add Quick Export toolbar
@@ -58,27 +65,47 @@ class QuickExport:
         # Add toolbar buttons
         ###
         # CSV
-        self.exportAsCsvAction = QAction(
+        self.exportToCsvAction = QAction(
             QIcon(os.path.dirname(__file__) +"/icons/export-csv.svg"),
             QApplication.translate("quickExport", u"Export table as CSV"),
             self.iface.mainWindow()
         )
-        self.toolbar.addAction(self.exportAsCsvAction)
-        self.toolbar.setObjectName("quickExportAsCsv");
+        self.toolbar.addAction(self.exportToCsvAction)
+        self.toolbar.setObjectName("quickexportToCsv");
 
         # HTML
-        self.exportAsHtmlAction = QAction(
+        self.exportToHtmlAction = QAction(
             QIcon(os.path.dirname(__file__) +"/icons/export-html.svg"),
             QApplication.translate("quickExport", u"Export table as HTML"),
             self.iface.mainWindow()
         )
-        self.toolbar.addAction(self.exportAsHtmlAction)
-        self.toolbar.setObjectName("quickExportAsHtml");
+        self.toolbar.addAction(self.exportToHtmlAction)
+        self.toolbar.setObjectName("quickexportToHtml");
+
+        # PDF
+        self.exportToPdfAction = QAction(
+            QIcon(os.path.dirname(__file__) +"/icons/export-pdf.svg"),
+            QApplication.translate("quickExport", u"Export table as PDF"),
+            self.iface.mainWindow()
+        )
+        self.toolbar.addAction(self.exportToPdfAction)
+        self.toolbar.setObjectName("quickexportToPdf");
+
+        # Printer
+        self.exportToPrinterAction = QAction(
+            QIcon(os.path.dirname(__file__) +"/icons/export-pdf.svg"),
+            QApplication.translate("quickExport", u"Export table to printer"),
+            self.iface.mainWindow()
+        )
+        self.toolbar.addAction(self.exportToPrinterAction)
+        self.toolbar.setObjectName("quickexportToPrinter");
 
         # Connect each button to corresponding slot
         self.exportButtons = {
-            'csv': {'action' : self.exportAsCsvAction},
-            'html': {'action' : self.exportAsHtmlAction}
+            'csv': {'action' : self.exportToCsvAction},
+            'html': {'action' : self.exportToHtmlAction},
+            'pdf': {'action' : self.exportToPdfAction},
+            'printer': {'action' : self.exportToPrinterAction}
         }
         for key, item in self.exportButtons.items():
             action = item['action']
@@ -150,16 +177,17 @@ class QuickExport:
         if layer and layer.type() == QgsMapLayer.VectorLayer and hasattr(layer, 'providerType'):
 
             # Ask the user to choose the path
-            ePath = self.chooseExportFilePath(etype)
-
-            # Do the export
-            if ePath:
-                if etype == 'csv':
-                    msg, status = self.exportLayerToCsv(layer, ePath)
-                elif etype == 'html':
-                    msg, status = self.exportLayerToHtml(layer, ePath)
-                #~ elif etype == 'pdf':
-                    #~ msg = exportLayerToHtml()
+            if etype != 'printer':
+                ePath = self.chooseExportFilePath(etype)
+                if ePath:
+                    if etype == 'csv':
+                        msg, status = self.exportLayerToCsv(layer, ePath)
+                    elif etype == 'html':
+                        msg, status = self.exportLayerToHtml(layer, ePath)
+                    elif etype == 'pdf':
+                        msg, status = self.exportLayerToPdf(layer, ePath)
+            else:
+                msg, status = self.exportLayerToPdf(layer)
 
         else:
             msg = QApplication.translate("quickExport", "Please select a vector layer first.")
@@ -177,6 +205,7 @@ class QuickExport:
     def exportLayerToCsv(self, layer, ePath):
         '''
         Exports the layer to CSV
+
         '''
         QApplication.setOverrideCursor(Qt.WaitCursor)
         provider = layer.dataProvider()
@@ -207,6 +236,8 @@ class QuickExport:
     def exportLayerToHtml(self, layer, ePath):
         '''
         Exports the layer to HTML
+        using a template and reading the data
+        from the selected layer
         '''
         # Get template file path
         tplPath = os.path.join(
@@ -244,14 +275,26 @@ class QuickExport:
 
         # Create tbody content with feature attribute data
         tbody = ''
+        nbAttr = 0
+        i = 0
+        page = 1
         for feat in features:
             tbody+= '                <tr>\n'
             # Get attribute data
             attrs = feat.attributes()
+            nbAttr = len(attrs)
             tbody+= '                    <td>'
             tbody+= '</td>\n                    <td>'.join([str(a) for a in attrs])
             tbody+= '                    </td>\n'
             tbody+= '                </tr>\n\n'
+            i+=1
+            if i == self.maxLinesPerPage:
+                i = 0
+                tbody+= '</table><hr>'
+                tbody+= '<span style="float:right;">Page %s</span>' % page
+                tbody+= '<div style="page-break-before:always;"></div>'
+                tbody+= '<table><thead>' + thead + '</thead><tbody>'
+                page+=1
 
 
         # Date
@@ -269,6 +312,11 @@ class QuickExport:
         dt_info = QApplication.translate("quickExport", "Information")
         info = QApplication.translate("quickExport", "{} lines exported").format(str(nb))
 
+        # Adapt style if needed
+        style = ''
+        if nbAttr > 10:
+            style = 'th, td {font-size:small;}'
+
         # Replace values
         data = data.replace('$dt_title', dt_title)
         data = data.replace('$title', title)
@@ -280,6 +328,7 @@ class QuickExport:
         data = data.replace('$tbody', tbody)
         data = data.replace('$dt_date', dt_date)
         data = data.replace('$date', date)
+        data = data.replace('$style', style)
 
         try:
             # write html content
@@ -294,7 +343,6 @@ class QuickExport:
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
             status = QgsMessageBar.INFO
 
-
         # copy css file in the exported file folder
         try:
             shutil.copy2(cssPath, os.path.dirname(ePath))
@@ -304,6 +352,63 @@ class QuickExport:
         QApplication.restoreOverrideCursor()
 
         return msg, status
+
+
+    def exportLayerToPdf(self, layer, ePath=None):
+        '''
+        Exports the layer to PDF
+        First export to HTML then convert to PDF.
+        If not output file given, send directly to the printer
+        '''
+
+        # Create temporary file path
+        temp = tempfile.NamedTemporaryFile()
+        try:
+            # Create temporary HTML file
+            tPath = temp.name
+            tPath = '/tmp/test/sup.html'
+            msg, status = self.exportLayerToHtml(layer, tPath)
+
+            # Create a web view and fill it with the html file content
+            web = QWebView()
+            web.load(QUrl(tPath))
+
+
+            # Set page options
+            printer = QPrinter()
+            printer.setPageSize(QPrinter.A4)
+            printer.setOrientation(QPrinter.Landscape)
+            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setFontEmbeddingEnabled(True)
+            printer.setColorMode(QPrinter.Color)
+            printer.setCreator(u"QGIS - Plugin QuickExport")
+            printer.setDocName(u"Export - %s" % layer.title() and layer.title() or layer.name())
+
+            # Only set output file name in case of PDF export
+            if ePath:
+                printer.setOutputFileName(ePath)
+
+            # Print only when HTML content is loaded
+            def printIt():
+                #~ web.show()
+                web.print_(printer)
+            web.loadFinished[bool].connect(printIt)
+
+        except:
+            msg = QApplication.translate("quickExport", "An error occured during layer export.")
+            status = QgsMessageBar.CRITICAL
+        finally:
+            # Automatically cleans up the file
+            temp.close()
+            msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
+            status = QgsMessageBar.INFO
+
+
+        return msg, status
+
+
+
+
 
     def unload(self):
         # Remove the plugin menu item and icon
