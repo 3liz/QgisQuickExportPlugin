@@ -33,6 +33,8 @@ import shutil
 import datetime
 import locale
 import tempfile
+import sys
+import subprocess
 
 class QuickExport:
 
@@ -54,7 +56,13 @@ class QuickExport:
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
 
+        self.exportedFile = None
+
+        # PDF print options
         self.maxLinesPerPage = 30
+        self.maxAttributesBeforeSmallFontSize = 15
+        self.orientation = QPrinter.Landscape
+        self.pageSize = QPrinter.A4
 
 
     def initGui(self):
@@ -160,6 +168,7 @@ class QuickExport:
             str(ePath)
         )
 
+        self.exportedFile = ePath
         return ePath
 
 
@@ -178,16 +187,17 @@ class QuickExport:
 
             # Ask the user to choose the path
             if etype != 'printer':
-                ePath = self.chooseExportFilePath(etype)
-                if ePath:
+                self.chooseExportFilePath(etype)
+                if self.exportedFile:
                     if etype == 'csv':
-                        msg, status = self.exportLayerToCsv(layer, ePath)
+                        msg, status = self.exportLayerToCsv(layer)
                     elif etype == 'html':
-                        msg, status = self.exportLayerToHtml(layer, ePath)
+                        msg, status = self.exportLayerToHtml(layer)
                     elif etype == 'pdf':
-                        msg, status = self.exportLayerToPdf(layer, ePath)
+                        msg, status = self.exportLayerToPdf(layer)
+
             else:
-                msg, status = self.exportLayerToPdf(layer)
+                msg, status = self.exportLayerToPdf(layer, True)
 
         else:
             msg = QApplication.translate("quickExport", "Please select a vector layer first.")
@@ -195,14 +205,22 @@ class QuickExport:
 
         # Display status in the message bar
         if msg:
-            self.iface.messageBar().pushMessage(
-                QApplication.translate("quickExport", "Quick Export Plugin"),
-                msg,
+            widget = self.iface.messageBar().createMessage(msg)
+            # Add a button to open the file
+            if self.exportedFile and status == QgsMessageBar.INFO and etype != 'printer':
+                btOpen = QPushButton(widget)
+                btOpen.setText(QApplication.translate("quickExport", "Open file"))
+                btOpen.pressed.connect(self.openFile)
+                widget.layout().addWidget(btOpen)
+            # Display message bar
+            self.iface.messageBar().pushWidget(
+                widget,
                 status,
-                3
+                6
             )
 
-    def exportLayerToCsv(self, layer, ePath):
+
+    def exportLayerToCsv(self, layer):
         '''
         Exports the layer to CSV
 
@@ -211,7 +229,7 @@ class QuickExport:
         provider = layer.dataProvider()
         writer = QgsVectorFileWriter.writeAsVectorFormat(
             layer,
-            ePath,
+            self.exportedFile,
             provider.encoding(),
             layer.crs(),
             "CSV",
@@ -233,7 +251,7 @@ class QuickExport:
         return msg, status
 
 
-    def exportLayerToHtml(self, layer, ePath):
+    def exportLayerToHtml(self, layer, ePath=None):
         '''
         Exports the layer to HTML
         using a template and reading the data
@@ -284,15 +302,15 @@ class QuickExport:
             attrs = feat.attributes()
             nbAttr = len(attrs)
             tbody+= '                    <td>'
-            tbody+= '</td>\n                    <td>'.join([str(a) for a in attrs])
+            tbody+= '</td>\n                    <td>'.join([u"%s" % a for a in attrs])
             tbody+= '                    </td>\n'
             tbody+= '                </tr>\n\n'
             i+=1
             if i == self.maxLinesPerPage:
                 i = 0
-                tbody+= '</table><hr>'
+                tbody+= '</table>\n\n'
                 tbody+= '<span style="float:right;">Page %s</span>' % page
-                tbody+= '<div style="page-break-before:always;"></div>'
+                tbody+= '<div style="page-break-before:always;"></div>\n\n'
                 tbody+= '<table><thead>' + thead + '</thead><tbody>'
                 page+=1
 
@@ -314,8 +332,9 @@ class QuickExport:
 
         # Adapt style if needed
         style = ''
-        if nbAttr > 10:
+        if nbAttr > self.maxAttributesBeforeSmallFontSize:
             style = 'th, td {font-size:small;}'
+            self.maxLinesPerPage = 40
 
         # Replace values
         data = data.replace('$dt_title', dt_title)
@@ -329,6 +348,10 @@ class QuickExport:
         data = data.replace('$dt_date', dt_date)
         data = data.replace('$date', date)
         data = data.replace('$style', style)
+
+        # File path
+        if not ePath:
+            ePath = self.exportedFile
 
         try:
             # write html content
@@ -354,7 +377,7 @@ class QuickExport:
         return msg, status
 
 
-    def exportLayerToPdf(self, layer, ePath=None):
+    def exportLayerToPdf(self, layer, doPrint=False):
         '''
         Exports the layer to PDF
         First export to HTML then convert to PDF.
@@ -373,20 +396,18 @@ class QuickExport:
             web = QWebView()
             web.load(QUrl(tPath))
 
-
             # Set page options
             printer = QPrinter()
-            printer.setPageSize(QPrinter.A4)
-            printer.setOrientation(QPrinter.Landscape)
-            printer.setOutputFormat(QPrinter.PdfFormat)
+            printer.setPageSize(self.pageSize)
+            printer.setOrientation(self.orientation)
             printer.setFontEmbeddingEnabled(True)
             printer.setColorMode(QPrinter.Color)
             printer.setCreator(u"QGIS - Plugin QuickExport")
             printer.setDocName(u"Export - %s" % layer.title() and layer.title() or layer.name())
 
             # Only set output file name in case of PDF export
-            if ePath:
-                printer.setOutputFileName(ePath)
+            if not doPrint:
+                printer.setOutputFileName(self.exportedFile)
 
             # Print only when HTML content is loaded
             def printIt():
@@ -407,7 +428,15 @@ class QuickExport:
         return msg, status
 
 
-
+    def openFile(self):
+        '''
+        Opens a file with default system app
+        '''
+        if sys.platform == "win32":
+            os.startfile(self.exportedFile)
+        else:
+            opener ="open" if sys.platform == "darwin" else "xdg-open"
+            subprocess.call([opener, self.exportedFile])
 
 
     def unload(self):
