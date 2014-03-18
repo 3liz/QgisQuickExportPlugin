@@ -27,7 +27,7 @@ from qgis.core import *
 from qgis.gui import QgsMessageBar
 # Initialize Qt resources from file resources.py
 import resources
-import os.path
+import os
 from functools import partial
 import shutil
 import datetime
@@ -390,8 +390,7 @@ class QuickExport:
         temp = tempfile.NamedTemporaryFile()
         try:
             # Create temporary HTML file
-            tPath = temp.name
-            tPath = '/tmp/test/sup.html'
+            tPath = "%s.html" % temp.name
             msg, status = self.exportLayerToHtml(layer, tPath, True)
 
             # Create a web view and fill it with the html file content
@@ -415,6 +414,8 @@ class QuickExport:
             def printIt():
                 #~ web.show()
                 web.print_(printer)
+                os.remove(tPath)
+                os.remove(os.path.join(os.path.dirname(tPath), 'table.css'))
             web.loadFinished[bool].connect(printIt)
 
         except:
