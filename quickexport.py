@@ -68,8 +68,11 @@ class QuickExport:
         self.maxAttributesBeforeSmallFontSize = 15
         self.orientation = QPrinter.Landscape
         self.pageSize = QPrinter.A4
-        # CSS file path
+
+        # CSS options
         self.cssPath = ''
+        #self.csvDriverParameters = ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
+        self.csvDriverParameters = ['SEPARATOR=TAB']
 
         # Import QgsMessageBar
         try:
@@ -275,7 +278,7 @@ class QuickExport:
             layer.selectedFeatureCount(),
             None,
             [],
-            ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
+            self.csvDriverParameters
         )
 
         if writer == QgsVectorFileWriter.NoError:
