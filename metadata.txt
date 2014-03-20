@@ -10,7 +10,7 @@
 
 [general]
 name=Quick Export
-qgisMinimumVersion=2.0
+qgisMinimumVersion=1.8
 description=This plugin adds a toolbar with buttons to export the selected layer data to CSV, HTML and PDF files
 version=0.1
 author=3liz

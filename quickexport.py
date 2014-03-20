@@ -24,7 +24,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
 from qgis.core import *
-from qgis.gui import QgsMessageBar
 # Initialize Qt resources from file resources.py
 import resources
 import os
@@ -35,7 +34,6 @@ import locale
 import tempfile
 import sys
 import subprocess
-import apicompat
 
 class QuickExport:
 
@@ -46,9 +44,15 @@ class QuickExport:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+        # Qgis version
+        self.QgisVersion = QGis.QGIS_VERSION_INT
+
         # initialize locale
-        locale = QSettings().value("locale/userLocale")[0:2]
-        localePath = os.path.join(self.plugin_dir, 'i18n', 'quickexport_{}.qm'.format(locale))
+        if self.QgisVersion > 10900:
+            locale = QSettings().value("locale/userLocale")[0:2]
+        else:
+            locale = QSettings().value("locale/userLocale").toString()[0:2]
+        localePath = os.path.join(self.plugin_dir, 'i18n', 'quickexport_%s.qm' % locale)
 
         if os.path.exists(localePath):
             self.translator = QTranslator()
@@ -60,10 +64,25 @@ class QuickExport:
         self.exportedFile = None
 
         # PDF print options
-        self.maxLinesPerPage = 25
+        self.maxLinesPerPage = 20
         self.maxAttributesBeforeSmallFontSize = 15
         self.orientation = QPrinter.Landscape
         self.pageSize = QPrinter.A4
+        # CSS file path
+        self.cssPath = ''
+
+        # Import QgsMessageBar
+        try:
+            from qgis.gui import QgsMessageBar
+            self.hasMessageBar = True
+            self.mbStatusRel = {
+                'info': QgsMessageBar.INFO,
+                'critical': QgsMessageBar.CRITICAL,
+                'warning': QgsMessageBar.WARNING
+            }
+        except:
+            self.hasMessageBar = False
+            # print "no message bar available - use QMessageBox"
 
 
     def initGui(self):
@@ -150,7 +169,7 @@ class QuickExport:
             lastFile,
             etypeDic[etype]['fileType']
         )
-        if not ePath:
+        if not ePath and self.hasMessageBar:
             self.iface.messageBar().pushMessage(
                 QApplication.translate("quickExport", "Quick Export Plugin"),
                 QApplication.translate("quickExport", "Export has been canceled"),
@@ -202,23 +221,42 @@ class QuickExport:
 
         else:
             msg = QApplication.translate("quickExport", "Please select a vector layer first.")
-            status = QgsMessageBar.WARNING
+            status = 'warning'
 
         # Display status in the message bar
         if msg:
-            widget = self.iface.messageBar().createMessage(msg)
-            # Add a button to open the file
-            if self.exportedFile and status == QgsMessageBar.INFO and etype != 'printer':
-                btOpen = QPushButton(widget)
-                btOpen.setText(QApplication.translate("quickExport", "Open file"))
-                btOpen.pressed.connect(self.openFile)
-                widget.layout().addWidget(btOpen)
-            # Display message bar
-            self.iface.messageBar().pushWidget(
-                widget,
-                status,
-                6
-            )
+            if self.hasMessageBar:
+                widget = self.iface.messageBar().createMessage(msg)
+                # Add a button to open the file
+                if self.exportedFile and status == 'info' and etype != 'printer':
+                    btOpen = QPushButton(widget)
+                    btOpen.setText(QApplication.translate("quickExport", "Open file"))
+                    btOpen.pressed.connect(self.openFile)
+                    widget.layout().addWidget(btOpen)
+                # Display message bar
+                self.iface.messageBar().pushWidget(
+                    widget,
+                    self.mbStatusRel[status],
+                    6
+                )
+            else:
+                # Use old QgsMessageBox instead
+                if self.exportedFile and status == 'info' and etype != 'printer':
+                    openIt = QMessageBox.question(
+                        self.toolbar,
+                        u'Quick Export',
+                        msg + '\n\n' + QApplication.translate("quickExport", "Open file"),
+                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+                    )
+                    if openIt == QMessageBox.Yes:
+                        self.openFile()
+                else:
+                    QMessageBox.information(
+                        self.toolbar,
+                        u"Quick Export",
+                        msg,
+                        QMessageBox.Ok
+                )
 
 
     def exportLayerToCsv(self, layer):
@@ -242,10 +280,10 @@ class QuickExport:
 
         if writer == QgsVectorFileWriter.NoError:
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
-            status = QgsMessageBar.INFO
+            status = 'info'
         else:
             msg = QApplication.translate("quickExport", "An error occured during layer export.")
-            status = QgsMessageBar.CRITICAL
+            status = 'critical'
 
         QApplication.restoreOverrideCursor()
 
@@ -263,7 +301,7 @@ class QuickExport:
             self.plugin_dir,
             "templates/htmlTemplate.tpl"
         )
-        cssPath = os.path.join(
+        self.cssPath = os.path.join(
             self.plugin_dir,
             "templates/table.css"
         )
@@ -276,7 +314,12 @@ class QuickExport:
         fin.close()
 
         # Get layer fields names
-        fieldNames = [field.name() for field in layer.pendingFields() ]
+        fields = layer.pendingFields()
+        if self.QgisVersion > 10900:
+            fieldNames = [field.name() for field in fields ]
+        else:
+            fieldNames = [str(fields[i].name()) for i in fields]
+        nbAttr = len(fieldNames)
 
         # Create thead with attribute names
         thead = '                <tr>\n'
@@ -286,56 +329,77 @@ class QuickExport:
 
         # Get selected features or all features
         if layer.selectedFeatureCount():
-            features = layer.selectedFeatures()
             nb = layer.selectedFeatureCount()
         else:
-            features = layer.getFeatures()
+            features = layer.getFeatures() # have to do it here and not line 362
             nb = layer.featureCount()
 
         # Create tbody content with feature attribute data
         tbody = ''
-        nbAttr = 0
         i = 0
         page = 1
-        for feat in features:
+        attrValues = []
+        # QGIS >= 2.0
+        if self.QgisVersion > 10900:
+            if layer.selectedFeatureCount():
+                features = layer.selectedFeatures()
+            else:
+                features = layer.getFeatures()
+            for feat in features:
+                # Get attribute data
+                values = [u"%s" % a for a in feat.attributes()]
+                attrValues.append(values)
+        # QGIS 1.8
+        else:
+            provider = layer.dataProvider()
+            allAttrs = provider.attributeIndexes()
+            provider.select(allAttrs, QgsRectangle(), False)
+            if layer.selectedFeatureCount():
+                items = layer.selectedFeatures()
+            else:
+                #features = layer.getFeatures()
+                items = layer
+            for feat in items:
+                attrs = feat.attributeMap()
+                values = [u"%s" % v.toString() for k,v in attrs.iteritems()]
+                attrValues.append(values)
+        # Write table content in HTML syntax
+        for values in attrValues:
             tbody+= '                <tr>\n'
-            # Get attribute data
-            attrs = feat.attributes()
-            nbAttr = len(attrs)
             tbody+= '                    <td>'
-            tbody+= '</td>\n                    <td>'.join([u"%s" % a for a in attrs])
+            tbody+= '</td>\n                    <td>'.join(values)
             tbody+= '                    </td>\n'
             tbody+= '                </tr>\n\n'
             i+=1
-            if i == self.maxLinesPerPage and cutPages:
+            if i == self.maxLinesPerPage and cutPages and self.QgisVersion > 10900:
                 i = 0
                 tbody+= '</table>\n\n'
                 tbody+= '<span style="float:right;">Page %s</span>' % page
-                tbody+= '<div style="page-break-before:always;"></div>\n\n'
+                tbody+= '<div style="page-break-before:always;border: 1px solid white;"></div>\n\n'
                 tbody+= '<table><thead>' + thead + '</thead><tbody>'
                 page+=1
 
 
-        # Date
+        # Get creation date
         locale.setlocale(locale.LC_TIME,'')
         date_format = locale.nl_langinfo(locale.D_T_FMT)
         today = datetime.datetime.today()
         date = today.strftime(date_format)
-        dt_date = QApplication.translate("quickExport", "Generated by QGIS QuickExport plugin")
+        dt_date = unicode(QApplication.translate("quickExport", "Generated by QGIS QuickExport plugin"))
 
         # Title, abstract, and line count
-        dt_title = QApplication.translate("quickExport", "Layer")
+        dt_title = unicode(QApplication.translate("quickExport", "Layer"))
         title = layer.title() and layer.title() or layer.name()
-        dt_abstract = QApplication.translate("quickExport", "Abstract")
+        dt_abstract = unicode(QApplication.translate("quickExport", "Abstract"))
         abstract = layer.abstract() and str(layer.abstract()) or '-'
-        dt_info = QApplication.translate("quickExport", "Information")
-        info = QApplication.translate("quickExport", "{} lines exported").format(str(nb))
+        dt_info = unicode(QApplication.translate("quickExport", "Information"))
+        info = unicode(QApplication.translate("quickExport", "{} lines exported")).format(str(nb))
 
         # Adapt style if needed
         style = ''
         if nbAttr > self.maxAttributesBeforeSmallFontSize:
             style = 'th, td {font-size:small;}'
-            self.maxLinesPerPage = 40
+            self.maxLinesPerPage = 30
 
         # Replace values
         data = data.replace('$dt_title', dt_title)
@@ -363,14 +427,14 @@ class QuickExport:
 
         except IOError, e:
             msg = QApplication.translate("quickExport", "An error occured during layer export.")
-            status = QgsMessageBar.CRITICAL
+            status = 'critical'
         finally:
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
-            status = QgsMessageBar.INFO
+            status = 'info'
 
         # copy css file in the exported file folder
         try:
-            shutil.copy2(cssPath, os.path.dirname(ePath))
+            shutil.copy2(self.cssPath, os.path.dirname(str(ePath)))
         except IOError, e:
             print "CSS not available"
 
@@ -420,12 +484,12 @@ class QuickExport:
 
         except:
             msg = QApplication.translate("quickExport", "An error occured during layer export.")
-            status = QgsMessageBar.CRITICAL
+            status = 'critical'
         finally:
             # Automatically cleans up the file
             temp.close()
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
-            status = QgsMessageBar.INFO
+            status = 'info'
 
 
         return msg, status
