@@ -1,0 +1,4 @@
+CHANGELOG
+
+  Version 1.0
+  * Initial version : https://github.com/3liz/QgisQuickExportPlugin
