@@ -12,7 +12,7 @@
 name=Quick Export
 qgisMinimumVersion=1.8
 description=This plugin adds a toolbar with buttons to export the selected layer data to CSV, HTML and PDF files
-version=0.1
+version=1.0
 author=3liz
 email=info@3liz.com
 
@@ -24,11 +24,11 @@ email=info@3liz.com
 # changelog=
 
 # tags are comma separated with spaces allowed
-tags=
+tags= export, csv, html, print, pdf, attribute table, vector
 
-homepage=
-tracker=
-repository=
+homepage=https://github.com/3liz/QgisQuickExportPlugin
+tracker=https://github.com/3liz/QgisQuickExportPlugin/issues
+repository=https://github.com/3liz/QgisQuickExportPlugin/
 icon=icon.png
 # experimental flag
 experimental=True
