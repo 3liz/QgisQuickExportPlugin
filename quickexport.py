@@ -493,27 +493,41 @@ class QuickExport:
             web = QWebView()
             web.load(QUrl(tPath))
 
-            # Set page options
-            printer = QPrinter()
-            printer.setPageSize(self.pageSize)
-            printer.setOrientation(self.orientation)
-            printer.setFontEmbeddingEnabled(True)
-            printer.setColorMode(QPrinter.Color)
-            printer.setCreator(u"QGIS - Plugin QuickExport")
-            printer.setDocName(u"Export - %s" % layer.title() and layer.title() or layer.name())
-
-            # Only set output file name in case of PDF export
-            if not doPrint:
-                printer.setOutputFileName(self.exportedFile)
-
             # Print only when HTML content is loaded
             def printIt():
                 #~ web.show()
+                # Open the printer dialog if needed
+                if doPrint:
+                    dialog = QPrintDialog()
+                    if dialog.exec_() == QDialog.Accepted:
+                        printer = dialog.printer()
+                    else:
+                        return
+                # No print, only PDF export
+                else:
+                    # Set page options for PDF
+                    printer = QPrinter()
+                    printer.setPageSize(self.pageSize)
+                    printer.setOrientation(self.orientation)
+                    printer.setFontEmbeddingEnabled(True)
+                    printer.setColorMode(QPrinter.Color)
+                    # set output file name in case of PDF export
+                    printer.setOutputFileName(self.exportedFile)
+
+                # Set some metadata
+                printer.setCreator(u"QGIS - Plugin QuickExport")
+                printer.setDocName(u"Export - %s" % layer.title() and layer.title() or layer.name())
+
+                # Print
                 web.print_(printer)
+
+                # Try to remove temporary html file created before
                 try:
                     os.remove(tPath)
                 except OSError, e:
                     print "Error while deleted temporary files: %s)" % tPath
+
+            # Only print when the HTML content has been loaded in the QWebView
             web.loadFinished[bool].connect(printIt)
 
         except:
