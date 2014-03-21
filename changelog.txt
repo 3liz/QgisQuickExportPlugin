@@ -1,4 +1,11 @@
 CHANGELOG
 
+  Version 1.1
+  * Debug QGIS 1.8 export when no feature is selected
+  * Print - open the printer configuration dialog
+  * Debug date formatting in Windows - bug #2
+  * Use CSS internally to avoid webkit bugs
+  * Handle file deletion exception on Windows - bug #1
+
   Version 1.0
   * Initial version : https://github.com/3liz/QgisQuickExportPlugin

@@ -17,7 +17,7 @@ Features
 * **to CSV**: the exported file does not contains the geometries yet (may be a option in future versions). The field values are separeted with a tabulation.
 * **to HTML**: the file can be opened in any browser, and displays the attribute table styled via CSS
 * **to PDF**: the PDF contains the same table. It may be cut if too many fields are present in the attribute table. (a future version may correct this by dividing the table into pages when needed)
-* **to default printer** : the PDF is generated and sent to the default printer with default options. (a future version will let the user choose the printer and print options)
+* **to default printer** : the PDF is generated in a temporary file, and the printer configuration dialog is opened. The user can select the printer and change the options.
 
 The Original Code is 3liz code.
 

@@ -14,7 +14,8 @@ qgisMinimumVersion=1.8
 qgisMaximumVersion=2.99
 description=Quick Export adds a new toolbar in QGIS, with 4 actions to export any vector layer to CSV, HTML, PDF and printer.
 
-version=1.0
+version=1.1
+
 author=3liz
 email=info@3liz.com
 
@@ -23,7 +24,13 @@ email=info@3liz.com
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-# changelog=
+changelog=
+  Version 1.1
+  * Debug QGIS 1.8 export when no feature is selected
+  * Print - open the printer configuration dialog
+  * Debug date formatting in Windows - bug #2
+  * Use CSS internally to avoid webkit bugs
+  * Handle file deletion exception on Windows - bug #1
 
 # tags are comma separated with spaces allowed
 tags= export, csv, html, print, pdf, attribute table, vector
