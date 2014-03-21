@@ -62,6 +62,7 @@ class QuickExport:
                 QCoreApplication.installTranslator(self.translator)
 
         self.exportedFile = None
+        self.etype = 'csv'
 
         # PDF print options
         self.maxLinesPerPage = 20
@@ -149,6 +150,9 @@ class QuickExport:
         Method to allow the user to choose a file path
         to store the exported attribute table
         '''
+        msg = ''
+        status = 'info'
+        abort = False
 
         # Get data corresponding to chosen file type
         etypeDic = {
@@ -173,26 +177,35 @@ class QuickExport:
             etypeDic[etype]['fileType']
         )
         if not ePath and self.hasMessageBar:
-            self.iface.messageBar().pushMessage(
-                QApplication.translate("quickExport", "Quick Export Plugin"),
-                QApplication.translate("quickExport", "Export has been canceled"),
-                QgsMessageBar.INFO,
-                3
-            )
-            return None
+            msg = QApplication.translate("quickExport", "Export has been canceled")
+            status = 'info'
+            abort = True
+            return msg, status, abort
 
         # Delete file if exists (question already asked above)
         if os.path.exists(unicode(ePath)):
-            os.remove(unicode(ePath))
+            try:
+                os.remove(unicode(ePath))
+            except OSError, e:
+                msg = QApplication.translate("quickExport", "The file cannot be deleted. ")
+                if sys.platform == "win32":
+                    # it seems the return error is not unicode in windows !
+                    errorMsg = e.strerror.decode('mbcs')
+                else:
+                    errorMsg = e.strerror
+                msg+= QApplication.translate("quickExport", "Error: {}").format(errorMsg)
+                status = 'critical'
+                abort = True
+                return msg, status, abort
 
         # Save file path in QGIS settings
         s.setValue(
             "quickExport/%s" % etypeDic[etype]['lastFileSetting'],
             str(ePath)
         )
-
         self.exportedFile = ePath
-        return ePath
+
+        return msg, status, abort
 
 
 
@@ -201,6 +214,9 @@ class QuickExport:
         Export the attribute table of the selected
         vector layer to the chose file type
         '''
+        # set the type property
+        self.etype = etype
+
         # Get the active layer
         layer = self.iface.activeLayer()
         msg= None
@@ -210,8 +226,8 @@ class QuickExport:
 
             # Ask the user to choose the path
             if etype != 'printer':
-                self.chooseExportFilePath(etype)
-                if self.exportedFile:
+                msg, status, abort = self.chooseExportFilePath(etype)
+                if not abort:
                     if etype == 'csv':
                         msg, status = self.exportLayerToCsv(layer)
                     elif etype == 'html':
@@ -228,38 +244,50 @@ class QuickExport:
 
         # Display status in the message bar
         if msg:
-            if self.hasMessageBar:
-                widget = self.iface.messageBar().createMessage(msg)
-                # Add a button to open the file
-                if self.exportedFile and status == 'info' and etype != 'printer':
-                    btOpen = QPushButton(widget)
-                    btOpen.setText(QApplication.translate("quickExport", "Open file"))
-                    btOpen.pressed.connect(self.openFile)
-                    widget.layout().addWidget(btOpen)
-                # Display message bar
-                self.iface.messageBar().pushWidget(
-                    widget,
-                    self.mbStatusRel[status],
-                    6
+            self.displayMessage( msg, status )
+
+
+    def displayMessage(self, msg, status):
+        '''
+        Display a message to the user.
+        Uses the new message bar if available
+        or QgsMessageBox instead
+        '''
+        etype = self.etype
+
+        # Since QGIS 2.0, a message bar is available
+        if self.hasMessageBar:
+            widget = self.iface.messageBar().createMessage(msg)
+            # Add a button to open the file
+            if self.exportedFile and status == 'info' and etype != 'printer':
+                btOpen = QPushButton(widget)
+                btOpen.setText(QApplication.translate("quickExport", "Open file"))
+                btOpen.pressed.connect(self.openFile)
+                widget.layout().addWidget(btOpen)
+            # Display message bar
+            self.iface.messageBar().pushWidget(
+                widget,
+                self.mbStatusRel[status],
+                6
+            )
+        # Use old QgsMessageBox instead
+        else:
+            if self.exportedFile and status == 'info' and etype != 'printer':
+                openIt = QMessageBox.question(
+                    self.toolbar,
+                    u'Quick Export',
+                    msg + '\n\n' + QApplication.translate("quickExport", "Open file"),
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No
                 )
+                if openIt == QMessageBox.Yes:
+                    self.openFile()
             else:
-                # Use old QgsMessageBox instead
-                if self.exportedFile and status == 'info' and etype != 'printer':
-                    openIt = QMessageBox.question(
-                        self.toolbar,
-                        u'Quick Export',
-                        msg + '\n\n' + QApplication.translate("quickExport", "Open file"),
-                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No
-                    )
-                    if openIt == QMessageBox.Yes:
-                        self.openFile()
-                else:
-                    QMessageBox.information(
-                        self.toolbar,
-                        u"Quick Export",
-                        msg,
-                        QMessageBox.Ok
-                )
+                QMessageBox.information(
+                    self.toolbar,
+                    u"Quick Export",
+                    msg,
+                    QMessageBox.Ok
+            )
 
 
     def exportLayerToCsv(self, layer):
@@ -481,8 +509,14 @@ class QuickExport:
             def printIt():
                 #~ web.show()
                 web.print_(printer)
-                os.remove(tPath)
-                os.remove(os.path.join(os.path.dirname(tPath), 'table.css'))
+                try:
+                    os.remove(tPath)
+                except OSError, e:
+                    print "Error while deleted temporary files: %s)" % tPath
+                try:
+                    os.remove(os.path.join(os.path.dirname(tPath), 'table.css'))
+                except OSError, e:
+                    print "Error while deleted temporary files: %s)" % os.path.join(os.path.dirname(tPath), 'table.css')
             web.loadFinished[bool].connect(printIt)
 
         except:
