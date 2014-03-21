@@ -70,8 +70,13 @@ class QuickExport:
         self.orientation = QPrinter.Landscape
         self.pageSize = QPrinter.A4
 
-        # CSS options
-        self.cssPath = ''
+        # CSS template file
+        self.cssPath = os.path.join(
+            self.plugin_dir,
+            "templates/table.css"
+        )
+
+        # CSV options
         #self.csvDriverParameters = ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
         self.csvDriverParameters = ['SEPARATOR=TAB']
 
@@ -332,10 +337,6 @@ class QuickExport:
             self.plugin_dir,
             "templates/htmlTemplate.tpl"
         )
-        self.cssPath = os.path.join(
-            self.plugin_dir,
-            "templates/table.css"
-        )
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -405,8 +406,8 @@ class QuickExport:
             if i == self.maxLinesPerPage and cutPages and self.QgisVersion > 10900:
                 i = 0
                 tbody+= '</table>\n\n'
-                tbody+= '<span style="float:right;">Page %s</span>' % page
-                tbody+= '<div style="page-break-before:always;border: 1px solid white;"></div>\n\n'
+                tbody+= '<span>Page %s</span>' % page
+                tbody+= '<div style="page-break-after:always;border: 0px solid white;"></div>\n\n'
                 tbody+= '<table><thead>' + thead + '</thead><tbody>'
                 page+=1
 
@@ -428,8 +429,11 @@ class QuickExport:
 
         # Adapt style if needed
         style = ''
+        # Get CSS style from table.css
+        with open(self.cssPath, 'r') as content_file:
+            style = content_file.read()
         if nbAttr > self.maxAttributesBeforeSmallFontSize:
-            style = 'th, td {font-size:small;}'
+            style+= 'th, td {font-size:small;}'
             self.maxLinesPerPage = 30
 
         # Replace values
@@ -462,12 +466,6 @@ class QuickExport:
         finally:
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
             status = 'info'
-
-        # copy css file in the exported file folder
-        try:
-            shutil.copy2(self.cssPath, os.path.dirname(str(ePath)))
-        except IOError, e:
-            print "CSS not available"
 
         QApplication.restoreOverrideCursor()
 
@@ -513,10 +511,6 @@ class QuickExport:
                     os.remove(tPath)
                 except OSError, e:
                     print "Error while deleted temporary files: %s)" % tPath
-                try:
-                    os.remove(os.path.join(os.path.dirname(tPath), 'table.css'))
-                except OSError, e:
-                    print "Error while deleted temporary files: %s)" % os.path.join(os.path.dirname(tPath), 'table.css')
             web.loadFinished[bool].connect(printIt)
 
         except:
