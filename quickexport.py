@@ -363,7 +363,6 @@ class QuickExport:
         if layer.selectedFeatureCount():
             nb = layer.selectedFeatureCount()
         else:
-            features = layer.getFeatures() # have to do it here and not line 362
             nb = layer.featureCount()
 
         # Create tbody content with feature attribute data
@@ -386,10 +385,10 @@ class QuickExport:
             provider = layer.dataProvider()
             allAttrs = provider.attributeIndexes()
             provider.select(allAttrs, QgsRectangle(), False)
+            layer.select(allAttrs, QgsRectangle(), False)
             if layer.selectedFeatureCount():
                 items = layer.selectedFeatures()
             else:
-                #features = layer.getFeatures()
                 items = layer
             for feat in items:
                 attrs = feat.attributeMap()
