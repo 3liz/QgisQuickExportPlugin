@@ -34,6 +34,7 @@ import locale
 import tempfile
 import sys
 import subprocess
+import csv
 
 class QuickExport:
 
@@ -79,6 +80,9 @@ class QuickExport:
         # CSV options
         #self.csvDriverParameters = ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
         self.csvDriverParameters = ['SEPARATOR=TAB']
+        self.csvDelimiter = '\t'
+        self.csvQuotechar = '"'
+        self.csvQuoting = csv.QUOTE_MINIMAL
 
         # Import QgsMessageBar
         try:
@@ -295,55 +299,12 @@ class QuickExport:
             )
 
 
-    def exportLayerToCsv(self, layer):
+    def getLayerData(self, layer):
         '''
-        Exports the layer to CSV
-
+        Get fields and data from
+        a vector layer
         '''
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        provider = layer.dataProvider()
-        writer = QgsVectorFileWriter.writeAsVectorFormat(
-            layer,
-            self.exportedFile,
-            provider.encoding(),
-            layer.crs(),
-            "CSV",
-            layer.selectedFeatureCount(),
-            None,
-            [],
-            self.csvDriverParameters
-        )
-
-        if writer == QgsVectorFileWriter.NoError:
-            msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
-            status = 'info'
-        else:
-            msg = QApplication.translate("quickExport", "An error occured during layer export.")
-            status = 'critical'
-
-        QApplication.restoreOverrideCursor()
-
-        return msg, status
-
-
-    def exportLayerToHtml(self, layer, ePath=None, cutPages=False):
-        '''
-        Exports the layer to HTML
-        using a template and reading the data
-        from the selected layer
-        '''
-        # Get template file path
-        tplPath = os.path.join(
-            self.plugin_dir,
-            "templates/htmlTemplate.tpl"
-        )
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        # Read template file
-        fin = open(tplPath)
-        data = fin.read().decode('utf-8')
-        fin.close()
+        data = []
 
         # Get layer fields names
         fields = layer.pendingFields()
@@ -351,13 +312,7 @@ class QuickExport:
             fieldNames = [field.name() for field in fields ]
         else:
             fieldNames = [str(fields[i].name()) for i in fields]
-        nbAttr = len(fieldNames)
-
-        # Create thead with attribute names
-        thead = '                <tr>\n'
-        for field in fieldNames:
-            thead+= '                    <th>%s</th>\n' % field
-        thead+= '                </tr>\n\n'
+        data.append(fieldNames)
 
         # Get selected features or all features
         if layer.selectedFeatureCount():
@@ -365,11 +320,8 @@ class QuickExport:
         else:
             nb = layer.featureCount()
 
-        # Create tbody content with feature attribute data
-        tbody = ''
-        i = 0
-        page = 1
-        attrValues = []
+        # Get layer fields data
+
         # QGIS >= 2.0
         if self.QgisVersion > 10900:
             if layer.selectedFeatureCount():
@@ -379,7 +331,8 @@ class QuickExport:
             for feat in features:
                 # Get attribute data
                 values = [u"%s" % a for a in feat.attributes()]
-                attrValues.append(values)
+                data.append(values)
+
         # QGIS 1.8
         else:
             provider = layer.dataProvider()
@@ -393,7 +346,75 @@ class QuickExport:
             for feat in items:
                 attrs = feat.attributeMap()
                 values = [u"%s" % v.toString() for k,v in attrs.iteritems()]
-                attrValues.append(values)
+                data.append(values)
+
+        return data, nb
+
+
+    def exportLayerToCsv(self, layer):
+        '''
+        Exports the layer to CSV
+
+        '''
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        # Get layer data
+        data, nb = self.getLayerData(layer)
+
+        # Export data to CSV
+        try:
+            with open(self.exportedFile, 'wb') as csvfile:
+                writer = csv.writer(
+                    csvfile, delimiter=self.csvDelimiter, quotechar=self.csvQuotechar, quoting=self.csvQuoting
+                )
+                writer.writerows(data)
+            msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
+            status = 'info'
+        except OSError, e:
+            msg = QApplication.translate("quickExport", "An error occured during layer export." + str(e.error))
+            status = 'critical'
+        finally:
+            QApplication.restoreOverrideCursor()
+
+        return msg, status
+
+
+    def exportLayerToHtml(self, layer, ePath=None, cutPages=False):
+        '''
+        Exports the layer to HTML
+        using a template and reading the data
+        from the selected layer
+        '''
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        # Read template file
+        tplPath = os.path.join(
+            self.plugin_dir,
+            "templates/htmlTemplate.tpl"
+        )
+        fin = open(tplPath)
+        data = fin.read().decode('utf-8')
+        fin.close()
+
+        # Get layer data
+        layerData, nb = self.getLayerData(layer)
+
+        # Layer fields names
+        fieldNames = layerData[0]
+        nbAttr = len(fieldNames)
+
+        # Create thead with attribute names
+        thead = '                <tr>\n'
+        for field in fieldNames:
+            thead+= '                    <th>%s</th>\n' % field
+        thead+= '                </tr>\n\n'
+
+        # Create tbody content with feature attribute data
+        tbody = ''
+        i = 0
+        page = 1
+        attrValues = layerData[1:]
+
         # Write table content in HTML syntax
         for values in attrValues:
             tbody+= '                <tr>\n'
@@ -409,7 +430,6 @@ class QuickExport:
                 tbody+= '<div style="page-break-after:always;border: 0px solid white;"></div>\n\n'
                 tbody+= '<table><thead>' + thead + '</thead><tbody>'
                 page+=1
-
 
         # Get creation date
         locale.setlocale(locale.LC_TIME,'')
