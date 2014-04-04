@@ -39,7 +39,6 @@ import csv
 class QuickExport:
 
 
-
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
@@ -338,6 +337,34 @@ class QuickExport:
             )
 
 
+
+    def displayAttributeValue(self, value):
+        '''
+        Convert QGIS attribute data into readable values
+        '''
+        # QGIS version
+        isQgis2 = self.QgisVersion > 10900
+
+        # Get locale date representation
+        locale.setlocale(locale.LC_TIME,'')
+        if hasattr(locale, 'nl_langinfo'):
+            date_format = locale.nl_langinfo(locale.D_FMT)
+            datetime_format = locale.nl_langinfo(locale.D_T_FMT)
+        else:
+            date_format = "%x"
+            datetime_format = "%x %X"
+
+        # Convert value depending of type
+        if hasattr(value, 'toPyDate'):
+            output = value.toPyDate().strftime(date_format)
+        elif hasattr(value, 'toPyDateTime'):
+            output = value.toPyDateTime().strftime(datetime_format)
+        else:
+            output = u"%s" % value if isQgis2 else u"%s" % value.toString()
+
+        return output
+
+
     def getLayerData(self, layer):
         '''
         Get fields and data from
@@ -367,6 +394,8 @@ class QuickExport:
         else:
             nb = layer.featureCount()
 
+
+
         # Get layer fields data
 
         # QGIS >= 2.0
@@ -378,7 +407,7 @@ class QuickExport:
             for feat in features:
                 # Get attribute data
                 values = [
-                    u"%s" % a for i, a in enumerate(feat.attributes())
+                    self.displayAttributeValue(a) for i, a in enumerate(feat.attributes())
                     if layer.editType(i) != QgsVectorLayer.Hidden
                     or self.exportHiddenAttributes
                 ]
@@ -397,7 +426,7 @@ class QuickExport:
             for feat in items:
                 attrs = feat.attributeMap()
                 values = [
-                    u"%s" % v.toString() for k,v in attrs.iteritems()
+                    self.displayAttributeValue(v) for k,v in attrs.iteritems()
                     if layer.editType(k) != QgsVectorLayer.Hidden
                     or self.exportHiddenAttributes
                 ]
