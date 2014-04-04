@@ -64,6 +64,7 @@ class QuickExport:
 
         self.exportedFile = None
         self.etype = 'csv'
+        self.exportHiddenAttributes = False
 
         # PDF print options
         self.maxLinesPerPage = 20
@@ -309,9 +310,17 @@ class QuickExport:
         # Get layer fields names
         fields = layer.pendingFields()
         if self.QgisVersion > 10900:
-            fieldNames = [field.name() for field in fields ]
+            fieldNames = [
+                field.name() for i, field in enumerate(fields)
+                if layer.editType(i) != QgsVectorLayer.Hidden
+                or self.exportHiddenAttributes
+            ]
         else:
-            fieldNames = [str(fields[i].name()) for i in fields]
+            fieldNames = [
+                str(fields[i].name()) for i in fields
+                if layer.editType(i) != QgsVectorLayer.Hidden
+                or self.exportHiddenAttributes
+            ]
         data.append(fieldNames)
 
         # Get selected features or all features
@@ -330,7 +339,11 @@ class QuickExport:
                 features = layer.getFeatures()
             for feat in features:
                 # Get attribute data
-                values = [u"%s" % a for a in feat.attributes()]
+                values = [
+                    u"%s" % a for i, a in enumerate(feat.attributes())
+                    if layer.editType(i) != QgsVectorLayer.Hidden
+                    or self.exportHiddenAttributes
+                ]
                 data.append(values)
 
         # QGIS 1.8
@@ -345,7 +358,11 @@ class QuickExport:
                 items = layer
             for feat in items:
                 attrs = feat.attributeMap()
-                values = [u"%s" % v.toString() for k,v in attrs.iteritems()]
+                values = [
+                    u"%s" % v.toString() for k,v in attrs.iteritems()
+                    if layer.editType(k) != QgsVectorLayer.Hidden
+                    or self.exportHiddenAttributes
+                ]
                 data.append(values)
 
         return data, nb
