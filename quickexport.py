@@ -64,7 +64,6 @@ class QuickExport:
 
         self.exportedFile = None
         self.etype = 'csv'
-        self.exportHiddenAttributes = False
 
         # PDF print options
         self.maxLinesPerPage = 20
@@ -78,14 +77,17 @@ class QuickExport:
             "templates/table.css"
         )
 
-        # CSV options
-        #self.csvDriverParameters = ['GEOMETRY=AS_WKT', 'SEPARATOR=TAB']
-        self.csvDriverParameters = ['SEPARATOR=TAB']
+
+        # Get options from settings
+        self.exportHiddenAttributes = False
         self.csvDelimiter = '\t'
+        self.getSettings()
+
+        # Csv hard-coded options
         self.csvQuotechar = '"'
         self.csvQuoting = csv.QUOTE_MINIMAL
 
-        # Import QgsMessageBar
+        # Check if QgsMessageBar is available
         try:
             from qgis.gui import QgsMessageBar
             self.hasMessageBar = True
@@ -142,6 +144,17 @@ class QuickExport:
         self.toolbar.addAction(self.exportToPrinterAction)
         self.toolbar.setObjectName("quickexportToPrinter");
 
+        # Printer
+        self.openOptionDialog = QAction(
+            QIcon(os.path.dirname(__file__) +"/icons/option-dialog.png"),
+            QApplication.translate("quickExport", u"Open option dialog"),
+            self.iface.mainWindow()
+        )
+        self.toolbar.addAction(self.openOptionDialog)
+        self.toolbar.setObjectName("quickexportOptionDialog");
+        self.openOptionDialog.triggered.connect(self.open_option_dialog)
+
+
         # Connect each button to corresponding slot
         self.exportButtons = {
             'csv': {'action' : self.exportToCsvAction},
@@ -153,6 +166,28 @@ class QuickExport:
             action = item['action']
             slot = partial(self.exportLayer, key)
             action.triggered.connect(slot)
+
+
+    def getSettings(self):
+        '''
+        Get options values from QSettings
+        and set corresponding class properties
+        '''
+        # Options from QSettings
+        s = QSettings()
+        exportHiddenAttributes = s.value("quickexport/exportHiddenAttributes", False, type=bool)
+        self.exportHiddenAttributes = exportHiddenAttributes
+
+        # CSV options
+        csvDelimiter = s.value("quickexport/csvDelimiter", 'tab', type=str)
+        self.csvDelimiterMap = {
+            'tab': '\t',
+            'comma': ',',
+            'semicolon': ';',
+            'pipe': '|'
+        }
+        self.csvDelimiter = self.csvDelimiterMap[csvDelimiter]
+
 
 
     def chooseExportFilePath(self, etype='csv'):
@@ -226,6 +261,9 @@ class QuickExport:
         '''
         # set the type property
         self.etype = etype
+
+        # Set settings from QSettings
+        self.getSettings()
 
         # Get the active layer
         layer = self.iface.activeLayer()
@@ -590,7 +628,86 @@ class QuickExport:
             subprocess.call([opener, self.exportedFile])
 
 
+    def open_option_dialog(self):
+        '''
+        Config dialog
+        '''
+        dialog = quickexport_option_dialog(self.iface)
+        dialog.exec_()
+
+
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.mainWindow().removeToolBar(self.toolbar)
 
+
+
+# --------------------------------------------------------
+#        Option - Let the user configure options
+# --------------------------------------------------------
+
+from quickexport_option_form import *
+
+class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
+    def __init__(self, iface):
+        QDialog.__init__(self)
+        self.iface = iface
+        self.setupUi(self)
+
+        # Signals/Slot Connections
+        self.rejected.connect(self.onReject)
+        self.buttonBox.rejected.connect(self.onReject)
+        self.buttonBox.accepted.connect(self.onAccept)
+
+        # Set initial widget values
+        self.getValuesFromSettings()
+
+
+    def getValuesFromSettings(self):
+        '''
+        Get values from QGIS Settings
+        and apply them to dialog items
+        '''
+        s = QSettings()
+
+        # Export hidden attributes
+        exportHiddenAttributes = s.value("quickexport/exportHiddenAttributes", False, type=bool)
+        if exportHiddenAttributes:
+            self.cbExportHiddenAttributes.setChecked(exportHiddenAttributes)
+
+        # CSV delimiter
+        csvDelimiter = s.value("quickexport/csvDelimiter", 'tab', type=str)
+        if csvDelimiter:
+            delimiterRadioButtons =  self.gbDelimiter.findChildren(QRadioButton)
+            for radio in delimiterRadioButtons:
+                radio.setChecked(csvDelimiter == radio.text())
+
+
+
+    def onAccept(self):
+        '''
+        Save options into QSettings when pressing OK button
+        '''
+
+        s = QSettings()
+
+        # Export hidden attributes
+        s.setValue("quickexport/exportHiddenAttributes", self.cbExportHiddenAttributes.isChecked())
+
+        # CSV delimiter
+        delimiterRadioButtons =  self.gbDelimiter.findChildren(QRadioButton)
+        csvDelimiter = s.value("quickexport/csvDelimiter", 'tab', type=str)
+        for radio in delimiterRadioButtons:
+            if radio.isChecked():
+                csvDelimiter = radio.text()
+        s.setValue("quickexport/csvDelimiter", csvDelimiter)
+
+        self.accept()
+
+    def onReject(self):
+        '''
+        Run some actions when
+        the user closes the dialog
+        '''
+        string = "quickexport option dialog closed"
+        self.close()
