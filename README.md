@@ -12,12 +12,30 @@ This plugin has been developped by 3liz ( http://3liz.com )  .
 Features
 ----------
 
+Export tools
+_____________
+
 **Quick Export** adds a new toolbar in QGIS, with 4 actions to export any vector layer :
 
-* **to CSV**: the exported file does not contains the geometries yet (may be a option in future versions). The field values are separeted with a tabulation.
+* **to CSV**: the exported file does not contains the geometries yet (may be a option in future versions). The delimiter can be set in the option dialog (comma, tab, semicolon or pipe).
 * **to HTML**: the file can be opened in any browser, and displays the attribute table styled via CSS
 * **to PDF**: the PDF contains the same table. It may be cut if too many fields are present in the attribute table. (a future version may correct this by dividing the table into pages when needed)
 * **to default printer** : the PDF is generated in a temporary file, and the printer configuration dialog is opened. The user can select the printer and change the options.
+
+
+Options dialog
+________________
+
+Some settings can be changed in the Options dialog, which can be opened via the fifth grey button [O] in the toolbar :
+
+* General settings
+
+  - Export hidden attributes : if checked, all the fields will be exported, even if marked as Hidden via the edit type option (fields tab of the vector layer properties dialog)
+
+* CSV export
+
+  - The delimiter can be chosen between tab, comma, pipe and semicolon
+
 
 The Original Code is 3liz code.
 

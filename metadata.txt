@@ -14,7 +14,7 @@ qgisMinimumVersion=1.8
 qgisMaximumVersion=2.99
 description=Quick Export adds a new toolbar in QGIS, with 4 actions to export any vector layer to CSV, HTML, PDF and printer.
 
-version=1.1
+version=1.2
 
 author=3liz
 email=info@3liz.com
@@ -25,12 +25,13 @@ email=info@3liz.com
 
 # Uncomment the following line and add your changelog entries:
 changelog=
-  Version 1.1
-  * Debug QGIS 1.8 export when no feature is selected
-  * Print - open the printer configuration dialog
-  * Debug date formatting in Windows - bug #2
-  * Use CSS internally to avoid webkit bugs
-  * Handle file deletion exception on Windows - bug #1
+  Version 1.2
+  * Debug export for DATE and DATETIME format - bug #3
+  * Debug wrong settings passed depending on language
+  * Add a options dialog to let the user choose default behaviour : csv delimiter & hidden fields
+  * Export only fields wich are not Hidden (fields tab of vector layer properties)
+  * Export CSV via csv module instead of QgsVectorFileWriter.writeAsVectorFormat
+
 
 # tags are comma separated with spaces allowed
 tags= export, csv, html, print, pdf, attribute table, vector
@@ -41,7 +42,7 @@ repository=https://github.com/3liz/QgisQuickExportPlugin/
 icon=icon.png
 
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False

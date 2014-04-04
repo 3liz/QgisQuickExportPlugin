@@ -1,5 +1,12 @@
 CHANGELOG
 
+  Version 1.2
+  * Debug export for DATE and DATETIME format - bug #3
+  * Debug wrong settings passed depending on language
+  * Add a options dialog to let the user choose default behaviour : csv delimiter & hidden fields
+  * Export only fields wich are not Hidden (fields tab of vector layer properties)
+  * Export CSV via csv module instead of QgsVectorFileWriter.writeAsVectorFormat
+
   Version 1.1
   * Debug QGIS 1.8 export when no feature is selected
   * Print - open the printer configuration dialog
