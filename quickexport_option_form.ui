@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>519</width>
-    <height>245</height>
+    <width>570</width>
+    <height>242</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,8 +24,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>499</width>
-        <height>225</height>
+        <width>550</width>
+        <height>222</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -97,16 +97,19 @@
               </widget>
              </item>
              <item>
-              <widget class="QRadioButton" name="rbDelimiterComma">
+              <widget class="QRadioButton" name="rbDelimiterTab">
                <property name="text">
-                <string>comma</string>
+                <string>tab</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QRadioButton" name="rbDelimiterTab">
+              <widget class="QRadioButton" name="rbDelimiterComma">
                <property name="text">
-                <string>tab</string>
+                <string>comma</string>
                </property>
               </widget>
              </item>

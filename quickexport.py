@@ -25,7 +25,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtWebKit import *
 from qgis.core import *
 # Initialize Qt resources from file resources.py
-import resources
+import resource_rc
 import os
 from functools import partial
 import shutil
@@ -179,12 +179,12 @@ class QuickExport:
         self.exportHiddenAttributes = exportHiddenAttributes
 
         # CSV options
-        csvDelimiter = s.value("quickexport/csvDelimiter", 'tab', type=str)
+        csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
         self.csvDelimiterMap = {
-            'tab': '\t',
-            'comma': ',',
-            'semicolon': ';',
-            'pipe': '|'
+            0: '\t',
+            1: ',',
+            2: '|',
+            3: ';'
         }
         self.csvDelimiter = self.csvDelimiterMap[csvDelimiter]
 
@@ -662,6 +662,13 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
         # Set initial widget values
         self.getValuesFromSettings()
 
+        self.csvDelimiterMap = {
+            0: '\t',
+            1: ',',
+            2: '|',
+            3: ';'
+        }
+
 
     def getValuesFromSettings(self):
         '''
@@ -676,11 +683,11 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
             self.cbExportHiddenAttributes.setChecked(exportHiddenAttributes)
 
         # CSV delimiter
-        csvDelimiter = s.value("quickexport/csvDelimiter", 'tab', type=str)
+        csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
         if csvDelimiter:
             delimiterRadioButtons =  self.gbDelimiter.findChildren(QRadioButton)
-            for radio in delimiterRadioButtons:
-                radio.setChecked(csvDelimiter == radio.text())
+            for i, radio in enumerate(delimiterRadioButtons):
+                radio.setChecked(csvDelimiter == i)
 
 
 
@@ -696,10 +703,10 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
 
         # CSV delimiter
         delimiterRadioButtons =  self.gbDelimiter.findChildren(QRadioButton)
-        csvDelimiter = s.value("quickexport/csvDelimiter", 'tab', type=str)
-        for radio in delimiterRadioButtons:
+        csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
+        for i, radio in enumerate(delimiterRadioButtons):
             if radio.isChecked():
-                csvDelimiter = radio.text()
+                csvDelimiter = i
         s.setValue("quickexport/csvDelimiter", csvDelimiter)
 
         self.accept()

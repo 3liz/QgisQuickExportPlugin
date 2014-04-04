@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'quickexport_option_form.ui'
 #
-# Created: Fri Apr  4 11:48:05 2014
+# Created: Fri Apr  4 15:06:30 2014
 #      by: PyQt4 UI code generator 4.10.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,14 +26,14 @@ except AttributeError:
 class Ui_quickexport_option_form(object):
     def setupUi(self, quickexport_option_form):
         quickexport_option_form.setObjectName(_fromUtf8("quickexport_option_form"))
-        quickexport_option_form.resize(519, 245)
+        quickexport_option_form.resize(570, 242)
         self.verticalLayout = QtGui.QVBoxLayout(quickexport_option_form)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.scrollArea = QtGui.QScrollArea(quickexport_option_form)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
         self.scrollAreaWidgetContents = QtGui.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 499, 225))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 222))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
@@ -73,12 +73,13 @@ class Ui_quickexport_option_form(object):
         self.label.setFont(font)
         self.label.setObjectName(_fromUtf8("label"))
         self.horizontalLayout.addWidget(self.label)
+        self.rbDelimiterTab = QtGui.QRadioButton(self.gbDelimiter)
+        self.rbDelimiterTab.setChecked(True)
+        self.rbDelimiterTab.setObjectName(_fromUtf8("rbDelimiterTab"))
+        self.horizontalLayout.addWidget(self.rbDelimiterTab)
         self.rbDelimiterComma = QtGui.QRadioButton(self.gbDelimiter)
         self.rbDelimiterComma.setObjectName(_fromUtf8("rbDelimiterComma"))
         self.horizontalLayout.addWidget(self.rbDelimiterComma)
-        self.rbDelimiterTab = QtGui.QRadioButton(self.gbDelimiter)
-        self.rbDelimiterTab.setObjectName(_fromUtf8("rbDelimiterTab"))
-        self.horizontalLayout.addWidget(self.rbDelimiterTab)
         self.rbDelimiterPipe = QtGui.QRadioButton(self.gbDelimiter)
         self.rbDelimiterPipe.setObjectName(_fromUtf8("rbDelimiterPipe"))
         self.horizontalLayout.addWidget(self.rbDelimiterPipe)
@@ -106,8 +107,8 @@ class Ui_quickexport_option_form(object):
         self.label_7.setText(_translate("quickexport_option_form", "Export hidden attributes", None))
         self.groupBox.setTitle(_translate("quickexport_option_form", "CSV export", None))
         self.label.setText(_translate("quickexport_option_form", "Delimiter", None))
-        self.rbDelimiterComma.setText(_translate("quickexport_option_form", "comma", None))
         self.rbDelimiterTab.setText(_translate("quickexport_option_form", "tab", None))
+        self.rbDelimiterComma.setText(_translate("quickexport_option_form", "comma", None))
         self.rbDelimiterPipe.setText(_translate("quickexport_option_form", "pipe", None))
         self.rbDelimiterSemicolon.setText(_translate("quickexport_option_form", "semicolon", None))
 
