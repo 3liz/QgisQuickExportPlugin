@@ -104,6 +104,7 @@ class QuickExport:
 
         # Add Quick Export toolbar
         self.toolbar = self.iface.addToolBar(u'Quick Export');
+        self.toolbar.setObjectName("quickExportToolbar")
 
         # Add toolbar buttons
         ###
@@ -114,7 +115,7 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToCsvAction)
-        self.toolbar.setObjectName("quickexportToCsv");
+        self.exportToCsvAction.setObjectName("quickexportToCsv");
 
         # HTML
         self.exportToHtmlAction = QAction(
@@ -123,7 +124,7 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToHtmlAction)
-        self.toolbar.setObjectName("quickexportToHtml");
+        self.exportToHtmlAction.setObjectName("quickexportToHtml");
 
         # PDF
         self.exportToPdfAction = QAction(
@@ -132,7 +133,7 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToPdfAction)
-        self.toolbar.setObjectName("quickexportToPdf");
+        self.exportToPdfAction.setObjectName("quickexportToPdf");
 
         # Printer
         self.exportToPrinterAction = QAction(
@@ -141,16 +142,16 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToPrinterAction)
-        self.toolbar.setObjectName("quickexportToPrinter");
+        self.exportToPrinterAction.setObjectName("quickexportToPrinter");
 
-        # Printer
+        # Options
         self.openOptionDialog = QAction(
             QIcon(os.path.dirname(__file__) +"/icons/option-dialog.png"),
             QApplication.translate("quickExport", u"Open option dialog"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.openOptionDialog)
-        self.toolbar.setObjectName("quickexportOptionDialog");
+        self.openOptionDialog.setObjectName("quickexportOptionDialog");
         self.openOptionDialog.triggered.connect(self.open_option_dialog)
 
 
