@@ -19,13 +19,19 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import print_function
+from __future__ import absolute_import
 # Import the PyQt and QGIS libraries
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtWebKit import *
+from builtins import str
+from builtins import object
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QMessageBox
+from PyQt5.QtPrintSupport import QPrinter
+#from PyQt4.QtWebKit import *
 from qgis.core import *
 # Initialize Qt resources from file resources.py
-import resource_rc
+from . import resource_rc
 import os
 from functools import partial
 import shutil
@@ -36,7 +42,7 @@ import sys
 import subprocess
 import csv
 
-class QuickExport:
+class QuickExport(object):
 
 
     def __init__(self, iface):
@@ -45,11 +51,12 @@ class QuickExport:
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
         # Qgis version
-        self.QgisVersion = QGis.QGIS_VERSION_INT
+        self.QgisVersion = Qgis.QGIS_VERSION_INT
 
         # initialize locale
         if self.QgisVersion > 10900:
             locale = QSettings().value("locale/userLocale")[0:2]
+        # ajh presumably it is time to remove this
         else:
             locale = QSettings().value("locale/userLocale").toString()[0:2]
         localePath = os.path.join(self.plugin_dir, 'i18n', 'quickexport_%s.qm' % locale)
@@ -104,7 +111,6 @@ class QuickExport:
 
         # Add Quick Export toolbar
         self.toolbar = self.iface.addToolBar(u'Quick Export');
-        self.toolbar.setObjectName("quickExportToolbar")
 
         # Add toolbar buttons
         ###
@@ -115,7 +121,7 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToCsvAction)
-        self.exportToCsvAction.setObjectName("quickexportToCsv");
+        self.toolbar.setObjectName("quickexportToCsv");
 
         # HTML
         self.exportToHtmlAction = QAction(
@@ -124,7 +130,7 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToHtmlAction)
-        self.exportToHtmlAction.setObjectName("quickexportToHtml");
+        self.toolbar.setObjectName("quickexportToHtml");
 
         # PDF
         self.exportToPdfAction = QAction(
@@ -133,7 +139,7 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToPdfAction)
-        self.exportToPdfAction.setObjectName("quickexportToPdf");
+        self.toolbar.setObjectName("quickexportToPdf");
 
         # Printer
         self.exportToPrinterAction = QAction(
@@ -142,16 +148,16 @@ class QuickExport:
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToPrinterAction)
-        self.exportToPrinterAction.setObjectName("quickexportToPrinter");
+        self.toolbar.setObjectName("quickexportToPrinter");
 
-        # Options
+        # Printer
         self.openOptionDialog = QAction(
             QIcon(os.path.dirname(__file__) +"/icons/option-dialog.png"),
             QApplication.translate("quickExport", u"Open option dialog"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.openOptionDialog)
-        self.openOptionDialog.setObjectName("quickexportOptionDialog");
+        self.toolbar.setObjectName("quickexportOptionDialog");
         self.openOptionDialog.triggered.connect(self.open_option_dialog)
 
 
@@ -162,7 +168,7 @@ class QuickExport:
             'pdf': {'action' : self.exportToPdfAction},
             'printer': {'action' : self.exportToPrinterAction}
         }
-        for key, item in self.exportButtons.items():
+        for key, item in list(self.exportButtons.items()):
             action = item['action']
             slot = partial(self.exportLayer, key)
             action.triggered.connect(slot)
@@ -198,6 +204,7 @@ class QuickExport:
         msg = ''
         status = 'info'
         abort = False
+		
 
         # Get data corresponding to chosen file type
         etypeDic = {
@@ -215,7 +222,7 @@ class QuickExport:
         )
 
         # Let the user choose new file path
-        ePath = QFileDialog.getSaveFileName (
+        ePath, __ = QFileDialog.getSaveFileName (
             None,
             QApplication.translate("quickExport", "Please choose the destination file path."),
             lastFile,
@@ -228,16 +235,12 @@ class QuickExport:
             return msg, status, abort
 
         # Delete file if exists (question already asked above)
-        if os.path.exists(unicode(ePath)):
+        if os.path.exists(str(ePath)):
             try:
-                os.remove(unicode(ePath))
-            except OSError, e:
+                os.remove(str(ePath))
+            except OSError as e:
                 msg = QApplication.translate("quickExport", "The file cannot be deleted. ")
-                if sys.platform == "win32":
-                    # it seems the return error is not unicode in windows !
-                    errorMsg = e.strerror.decode('mbcs')
-                else:
-                    errorMsg = e.strerror
+                errorMsg = e.strerror
                 msg+= QApplication.translate("quickExport", "Error: {}").format(errorMsg)
                 status = 'critical'
                 abort = True
@@ -374,13 +377,13 @@ class QuickExport:
         data = []
 
         # Get layer fields names
-        fields = layer.pendingFields()
+        fields = layer.fields()
         if self.QgisVersion > 10900:
             fieldNames = [
                 field.name() for i, field in enumerate(fields)
-                if layer.editType(i) != QgsVectorLayer.Hidden
-                or self.exportHiddenAttributes
+                if layer.editorWidgetSetup(i).type() != 'Hidden'
             ]
+        # ajh presumably it is time to remove this
         else:
             fieldNames = [
                 str(fields[i].name()) for i in fields
@@ -409,12 +412,12 @@ class QuickExport:
                 # Get attribute data
                 values = [
                     self.displayAttributeValue(a) for i, a in enumerate(feat.attributes())
-                    if layer.editType(i) != QgsVectorLayer.Hidden
-                    or self.exportHiddenAttributes
+                    if layer.editorWidgetSetup(i).type() != 'Hidden'
                 ]
                 data.append(values)
 
-        # QGIS 1.8
+        # ajh presumably it is time to remove this
+		# QGIS 1.8
         else:
             provider = layer.dataProvider()
             allAttrs = provider.attributeIndexes()
@@ -427,7 +430,7 @@ class QuickExport:
             for feat in items:
                 attrs = feat.attributeMap()
                 values = [
-                    self.displayAttributeValue(v) for k,v in attrs.iteritems()
+                    self.displayAttributeValue(v) for k,v in list(attrs.items())
                     if layer.editType(k) != QgsVectorLayer.Hidden
                     or self.exportHiddenAttributes
                 ]
@@ -448,14 +451,14 @@ class QuickExport:
 
         # Export data to CSV
         try:
-            with open(self.exportedFile, 'wb') as csvfile:
+            with open(self.exportedFile, 'w') as csvfile:
                 writer = csv.writer(
                     csvfile, delimiter=self.csvDelimiter, quotechar=self.csvQuotechar, quoting=self.csvQuoting
                 )
                 writer.writerows(data)
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
             status = 'info'
-        except OSError, e:
+        except OSError as e:
             msg = QApplication.translate("quickExport", "An error occured during layer export." + str(e.error))
             status = 'critical'
         finally:
@@ -478,7 +481,7 @@ class QuickExport:
             "templates/htmlTemplate.tpl"
         )
         fin = open(tplPath)
-        data = fin.read().decode('utf-8')
+        data = fin.read()
         fin.close()
 
         # Get layer data
@@ -524,15 +527,15 @@ class QuickExport:
             date_format = "%x %X"
         today = datetime.datetime.today()
         date = today.strftime(date_format)
-        dt_date = unicode(QApplication.translate("quickExport", "Generated by QGIS QuickExport plugin"))
+        dt_date = str(QApplication.translate("quickExport", "Generated by QGIS QuickExport plugin"))
 
         # Title, abstract, and line count
-        dt_title = unicode(QApplication.translate("quickExport", "Layer"))
+        dt_title = str(QApplication.translate("quickExport", "Layer"))
         title = layer.title() and layer.title() or layer.name()
-        dt_abstract = unicode(QApplication.translate("quickExport", "Abstract"))
+        dt_abstract = str(QApplication.translate("quickExport", "Abstract"))
         abstract = layer.abstract() and str(layer.abstract()) or '-'
-        dt_info = unicode(QApplication.translate("quickExport", "Information"))
-        info = unicode(QApplication.translate("quickExport", "{} lines exported")).format(str(nb))
+        dt_info = str(QApplication.translate("quickExport", "Information"))
+        info = str(QApplication.translate("quickExport", "{} lines exported")).format(str(nb))
 
         # Adapt style if needed
         style = ''
@@ -564,10 +567,10 @@ class QuickExport:
         try:
             # write html content
             f = open(ePath, 'w')
-            f.write(data.encode('utf-8'))
+            f.write(data)
             f.close()
 
-        except IOError, e:
+        except IOError as e:
             msg = QApplication.translate("quickExport", "An error occured during layer export.")
             status = 'critical'
         finally:
@@ -628,8 +631,9 @@ class QuickExport:
                 # Try to remove temporary html file created before
                 try:
                     os.remove(tPath)
-                except OSError, e:
-                    print "Error while deleted temporary files: %s)" % tPath
+                except OSError as e:
+                    # fix_print_with_import
+                    print("Error while deleted temporary files: %s)" % tPath)
 
             # Only print when the HTML content has been loaded in the QWebView
             web.loadFinished[bool].connect(printIt)
@@ -676,7 +680,7 @@ class QuickExport:
 #        Option - Let the user configure options
 # --------------------------------------------------------
 
-from quickexport_option_form import *
+from .quickexport_option_form import *
 
 class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
     def __init__(self, iface):
@@ -715,7 +719,7 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
         # CSV delimiter
         csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
         if csvDelimiter:
-            delimiterRadioButtons =  self.gbDelimiter.findChildren(QRadioButton)
+            delimiterRadioButtons =  self.gbDelimiter.findChildren(QtWidgets.QRadioButton)
             for i, radio in enumerate(delimiterRadioButtons):
                 radio.setChecked(csvDelimiter == i)
 
@@ -732,7 +736,7 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
         s.setValue("quickexport/exportHiddenAttributes", self.cbExportHiddenAttributes.isChecked())
 
         # CSV delimiter
-        delimiterRadioButtons =  self.gbDelimiter.findChildren(QRadioButton)
+        delimiterRadioButtons =  self.gbDelimiter.findChildren(QtWidgets.QRadioButton)
         csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
         for i, radio in enumerate(delimiterRadioButtons):
             if radio.isChecked():

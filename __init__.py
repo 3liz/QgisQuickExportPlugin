@@ -20,8 +20,9 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
+from __future__ import absolute_import
 
 def classFactory(iface):
     # load QuickExport class from file QuickExport
-    from quickexport import QuickExport
+    from .quickexport import QuickExport
     return QuickExport(iface)
