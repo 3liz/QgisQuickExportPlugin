@@ -230,6 +230,7 @@ class QuickExport(object):
             etypeDic[etype]['fileType']
         )
         if not ePath and self.hasMessageBar:
+            self.exportedFile = None
             msg = QApplication.translate("quickExport", "Export has been canceled")
             status = 'info'
             abort = True
