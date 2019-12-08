@@ -27,7 +27,7 @@ from builtins import object
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QMessageBox
-from PyQt5.QtPrintSupport import QPrinter
+from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
 from qgis.core import *
