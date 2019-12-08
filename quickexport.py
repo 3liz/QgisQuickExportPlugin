@@ -26,7 +26,7 @@ from builtins import str
 from builtins import object
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QMessageBox, QPushButton
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
 from PyQt5.QtWebKit import *
 from PyQt5.QtWebKitWidgets import *
@@ -99,9 +99,9 @@ class QuickExport(object):
             from qgis.gui import QgsMessageBar
             self.hasMessageBar = True
             self.mbStatusRel = {
-                'info': QgsMessageBar.INFO,
-                'critical': QgsMessageBar.CRITICAL,
-                'warning': QgsMessageBar.WARNING
+                'info': Qgis.Info,
+                'critical': Qgis.Critical,
+                'warning': Qgis.Warning
             }
         except:
             self.hasMessageBar = False
