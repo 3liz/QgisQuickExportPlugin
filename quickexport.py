@@ -27,9 +27,9 @@ from builtins import object
 from qgis.PyQt.QtCore import Qt, QSettings, QUrl
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QMessageBox, QPushButton
-from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWebKit import *
-from PyQt5.QtWebKitWidgets import *
+from qgis.PyQt.QtPrintSupport import QPrinter, QPrintDialog
+from qgis.PyQt.QtWebKit import *
+from qgis.PyQt.QtWebKitWidgets import *
 from qgis.core import *
 # Initialize Qt resources from file resources.py
 from . import resource_rc
