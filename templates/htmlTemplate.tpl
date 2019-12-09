@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <title>$title</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="author" content="Plugin QuickExport for QGIS 2+">
+        <meta name="author" content="Plugin QuickExport for QGIS 3+">
         <style>$style</style>
 
     </head>
