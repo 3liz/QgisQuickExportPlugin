@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  QuickExport
@@ -20,9 +19,9 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
-from __future__ import absolute_import
 
+
+# noinspection PyPep8Naming
 def classFactory(iface):
-    # load QuickExport class from file QuickExport
     from .quickexport import QuickExport
     return QuickExport(iface)

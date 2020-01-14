@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  QuickExport
@@ -19,23 +18,8 @@
  *                                                                         *
  ***************************************************************************/
 """
-from __future__ import print_function
-from __future__ import absolute_import
-# Import the PyQt and QGIS libraries
-from builtins import str
-from builtins import object
-from qgis.PyQt.QtCore import Qt, QSettings, QUrl
-from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QMessageBox, QPushButton
-from qgis.PyQt.QtPrintSupport import QPrinter, QPrintDialog
-from qgis.PyQt.QtWebKit import *
-from qgis.PyQt.QtWebKitWidgets import *
-from qgis.core import *
-# Initialize Qt resources from file resources.py
-from . import resource_rc
+
 import os
-from functools import partial
-import shutil
 import datetime
 import locale
 import tempfile
@@ -43,8 +27,20 @@ import sys
 import subprocess
 import csv
 
-class QuickExport(object):
+from functools import partial
 
+from qgis.PyQt.QtCore import Qt, QSettings, QUrl, QTranslator, QCoreApplication
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QDialog, QAction, QApplication, QFileDialog, QPushButton
+from qgis.PyQt.QtPrintSupport import QPrinter, QPrintDialog
+from qgis.PyQt.QtWebKitWidgets import *
+from qgis.core import *
+
+from .quickexport_option_form import *
+from . import resource_rc
+
+
+class QuickExport:
 
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -55,19 +51,13 @@ class QuickExport(object):
         self.QgisVersion = Qgis.QGIS_VERSION_INT
 
         # initialize locale
-        if self.QgisVersion > 10900:
-            locale = QSettings().value("locale/userLocale")[0:2]
-        # ajh presumably it is time to remove this
-        else:
-            locale = QSettings().value("locale/userLocale").toString()[0:2]
+        locale = QSettings().value("locale/userLocale")[0:2]
         localePath = os.path.join(self.plugin_dir, 'i18n', 'quickexport_%s.qm' % locale)
 
         if os.path.exists(localePath):
             self.translator = QTranslator()
             self.translator.load(localePath)
-
-            if qVersion() > '4.3.3':
-                QCoreApplication.installTranslator(self.translator)
+            QCoreApplication.installTranslator(self.translator)
 
         self.exportedFile = None
         self.etype = 'csv'
@@ -84,7 +74,6 @@ class QuickExport(object):
             "templates/table.css"
         )
 
-
         # Get options from settings
         self.exportHiddenAttributes = False
         self.csvDelimiter = '\t'
@@ -94,73 +83,72 @@ class QuickExport(object):
         self.csvQuotechar = '"'
         self.csvQuoting = csv.QUOTE_MINIMAL
 
-        # Check if QgsMessageBar is available
-        try:
-            from qgis.gui import QgsMessageBar
-            self.hasMessageBar = True
-            self.mbStatusRel = {
-                'info': Qgis.Info,
-                'critical': Qgis.Critical,
-                'warning': Qgis.Warning
-            }
-        except:
-            self.hasMessageBar = False
-            # print "no message bar available - use QMessageBox"
-
+        self.mbStatusRel = {
+            'info': Qgis.Info,
+            'critical': Qgis.Critical,
+            'warning': Qgis.Warning
+        }
+        self.toolbar = None
+        self.exportButtons = None
+        self.exportToCsvAction = None
+        self.exportToHtmlAction = None
+        self.exportToPdfAction = None
+        self.exportToPrinterAction = None
+        self.openOptionDialog = None
+        self.csvDelimiterMap = None
 
     def initGui(self):
 
         # Add Quick Export toolbar
-        self.toolbar = self.iface.addToolBar(u'Quick Export');
+        self.toolbar = self.iface.addToolBar(u'Quick Export')
 
         # Add toolbar buttons
         ###
         # CSV
         self.exportToCsvAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-csv.png"),
-            QApplication.translate("quickExport", u"Export table as CSV"),
+            QIcon(os.path.dirname(__file__) + "/icons/export-csv.png"),
+            QApplication.translate("quickExport", "Export table as CSV"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToCsvAction)
-        self.toolbar.setObjectName("quickexportToCsv");
+        self.toolbar.setObjectName("quickexportToCsv")
 
         # HTML
         self.exportToHtmlAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-html.png"),
-            QApplication.translate("quickExport", u"Export table as HTML"),
+            QIcon(os.path.dirname(__file__) + "/icons/export-html.png"),
+            QApplication.translate("quickExport", "Export table as HTML"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToHtmlAction)
-        self.toolbar.setObjectName("quickexportToHtml");
+        self.toolbar.setObjectName("quickexportToHtml")
 
         # PDF
         self.exportToPdfAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-pdf.png"),
-            QApplication.translate("quickExport", u"Export table as PDF"),
+            QIcon(os.path.dirname(__file__) + "/icons/export-pdf.png"),
+            QApplication.translate("quickExport", "Export table as PDF"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToPdfAction)
-        self.toolbar.setObjectName("quickexportToPdf");
+        self.toolbar.setObjectName("quickexportToPdf")
 
         # Printer
         self.exportToPrinterAction = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/export-printer.png"),
-            QApplication.translate("quickExport", u"Export table to printer"),
+            QIcon(os.path.dirname(__file__) + "/icons/export-printer.png"),
+            QApplication.translate("quickExport", "Export table to printer"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.exportToPrinterAction)
-        self.toolbar.setObjectName("quickexportToPrinter");
+        self.toolbar.setObjectName("quickexportToPrinter")
 
         # Printer
         self.openOptionDialog = QAction(
-            QIcon(os.path.dirname(__file__) +"/icons/option-dialog.png"),
-            QApplication.translate("quickExport", u"Open option dialog"),
+            QIcon(os.path.dirname(__file__) + "/icons/option-dialog.png"),
+            QApplication.translate("quickExport", "Open option dialog"),
             self.iface.mainWindow()
         )
         self.toolbar.addAction(self.openOptionDialog)
-        self.toolbar.setObjectName("quickexportOptionDialog");
+        self.toolbar.setObjectName("quickexportOptionDialog")
         self.openOptionDialog.triggered.connect(self.open_option_dialog)
-
 
         # Connect each button to corresponding slot
         self.exportButtons = {
@@ -169,17 +157,16 @@ class QuickExport(object):
             'pdf': {'action' : self.exportToPdfAction},
             'printer': {'action' : self.exportToPrinterAction}
         }
-        for key, item in list(self.exportButtons.items()):
+        for key, item in self.exportButtons.items():
             action = item['action']
             slot = partial(self.exportLayer, key)
             action.triggered.connect(slot)
 
-
     def getSettings(self):
-        '''
+        """
         Get options values from QSettings
         and set corresponding class properties
-        '''
+        """
         # Options from QSettings
         s = QSettings()
         exportHiddenAttributes = s.value("quickexport/exportHiddenAttributes", False, type=bool)
@@ -195,17 +182,14 @@ class QuickExport(object):
         }
         self.csvDelimiter = self.csvDelimiterMap[csvDelimiter]
 
-
-
     def chooseExportFilePath(self, etype='csv'):
-        '''
+        """
         Method to allow the user to choose a file path
         to store the exported attribute table
-        '''
+        """
         msg = ''
         status = 'info'
         abort = False
-		
 
         # Get data corresponding to chosen file type
         etypeDic = {
@@ -223,13 +207,13 @@ class QuickExport(object):
         )
 
         # Let the user choose new file path
-        ePath, __ = QFileDialog.getSaveFileName (
+        ePath, __ = QFileDialog.getSaveFileName(
             None,
             QApplication.translate("quickExport", "Please choose the destination file path."),
             lastFile,
             etypeDic[etype]['fileType']
         )
-        if not ePath and self.hasMessageBar:
+        if not ePath:
             self.exportedFile = None
             msg = QApplication.translate("quickExport", "Export has been canceled")
             status = 'info'
@@ -243,7 +227,7 @@ class QuickExport(object):
             except OSError as e:
                 msg = QApplication.translate("quickExport", "The file cannot be deleted. ")
                 errorMsg = e.strerror
-                msg+= QApplication.translate("quickExport", "Error: {}").format(errorMsg)
+                msg += QApplication.translate("quickExport", "Error: {}").format(errorMsg)
                 status = 'critical'
                 abort = True
                 return msg, status, abort
@@ -257,13 +241,11 @@ class QuickExport(object):
 
         return msg, status, abort
 
-
-
     def exportLayer(self, etype='csv'):
-        '''
+        """
         Export the attribute table of the selected
         vector layer to the chose file type
-        '''
+        """
         # set the type property
         self.etype = etype
 
@@ -272,7 +254,7 @@ class QuickExport(object):
 
         # Get the active layer
         layer = self.iface.activeLayer()
-        msg= None
+        msg = None
 
         # Check if the layer is suitable for data export
         if layer and layer.type() == QgsMapLayer.VectorLayer and hasattr(layer, 'providerType'):
@@ -297,62 +279,36 @@ class QuickExport(object):
 
         # Display status in the message bar
         if msg:
-            self.displayMessage( msg, status )
-
+            self.displayMessage(msg, status)
 
     def displayMessage(self, msg, status):
-        '''
+        """
         Display a message to the user.
         Uses the new message bar if available
         or QgsMessageBox instead
-        '''
+        """
         etype = self.etype
 
-        # Since QGIS 2.0, a message bar is available
-        if self.hasMessageBar:
-            widget = self.iface.messageBar().createMessage(msg)
-            # Add a button to open the file
-            if self.exportedFile and status == 'info' and etype != 'printer':
-                btOpen = QPushButton(widget)
-                btOpen.setText(QApplication.translate("quickExport", "Open file"))
-                btOpen.pressed.connect(self.openFile)
-                widget.layout().addWidget(btOpen)
-            # Display message bar
-            self.iface.messageBar().pushWidget(
-                widget,
-                self.mbStatusRel[status],
-                6
-            )
-        # Use old QgsMessageBox instead
-        else:
-            if self.exportedFile and status == 'info' and etype != 'printer':
-                openIt = QMessageBox.question(
-                    self.toolbar,
-                    u'Quick Export',
-                    msg + '\n\n' + QApplication.translate("quickExport", "Open file"),
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No
-                )
-                if openIt == QMessageBox.Yes:
-                    self.openFile()
-            else:
-                QMessageBox.information(
-                    self.toolbar,
-                    u"Quick Export",
-                    msg,
-                    QMessageBox.Ok
-            )
-
-
+        widget = self.iface.messageBar().createMessage(msg)
+        # Add a button to open the file
+        if self.exportedFile and status == 'info' and etype != 'printer':
+            btOpen = QPushButton(widget)
+            btOpen.setText(QApplication.translate("quickExport", "Open file"))
+            btOpen.pressed.connect(self.openFile)
+            widget.layout().addWidget(btOpen)
+        # Display message bar
+        self.iface.messageBar().pushWidget(
+            widget,
+            self.mbStatusRel[status],
+            6
+        )
 
     def displayAttributeValue(self, value):
-        '''
+        """
         Convert QGIS attribute data into readable values
-        '''
-        # QGIS version
-        isQgis2 = self.QgisVersion > 10900
-
+        """
         # Get locale date representation
-        locale.setlocale(locale.LC_TIME,'')
+        locale.setlocale(locale.LC_TIME, '')
         if hasattr(locale, 'nl_langinfo'):
             date_format = locale.nl_langinfo(locale.D_FMT)
             datetime_format = locale.nl_langinfo(locale.D_T_FMT)
@@ -366,32 +322,23 @@ class QuickExport(object):
         elif hasattr(value, 'toPyDateTime'):
             output = value.toPyDateTime().strftime(datetime_format)
         else:
-            output = u"%s" % value if isQgis2 else u"%s" % value.toString()
+            output = "%s" % value
 
         return output
 
-
     def getLayerData(self, layer):
-        '''
+        """
         Get fields and data from
         a vector layer
-        '''
+        """
         data = []
 
         # Get layer fields names
         fields = layer.fields()
-        if self.QgisVersion > 10900:
-            fieldNames = [
-                field.name() for i, field in enumerate(fields)
-                if layer.editorWidgetSetup(i).type() != 'Hidden'
-            ]
-        # ajh presumably it is time to remove this
-        else:
-            fieldNames = [
-                str(fields[i].name()) for i in fields
-                if layer.editType(i) != QgsVectorLayer.Hidden
-                or self.exportHiddenAttributes
-            ]
+        fieldNames = [
+            field.name() for i, field in enumerate(fields)
+            if layer.editorWidgetSetup(i).type() != 'Hidden'
+        ]
         data.append(fieldNames)
 
         # Get selected features or all features
@@ -400,52 +347,25 @@ class QuickExport(object):
         else:
             nb = layer.featureCount()
 
-
-
         # Get layer fields data
-
-        # QGIS >= 2.0
-        if self.QgisVersion > 10900:
-            if layer.selectedFeatureCount():
-                features = layer.selectedFeatures()
-            else:
-                features = layer.getFeatures()
-            for feat in features:
-                # Get attribute data
-                values = [
-                    self.displayAttributeValue(a) for i, a in enumerate(feat.attributes())
-                    if layer.editorWidgetSetup(i).type() != 'Hidden'
-                ]
-                data.append(values)
-
-        # ajh presumably it is time to remove this
-		# QGIS 1.8
+        if layer.selectedFeatureCount():
+            features = layer.selectedFeatures()
         else:
-            provider = layer.dataProvider()
-            allAttrs = provider.attributeIndexes()
-            provider.select(allAttrs, QgsRectangle(), False)
-            layer.select(allAttrs, QgsRectangle(), False)
-            if layer.selectedFeatureCount():
-                items = layer.selectedFeatures()
-            else:
-                items = layer
-            for feat in items:
-                attrs = feat.attributeMap()
-                values = [
-                    self.displayAttributeValue(v) for k,v in list(attrs.items())
-                    if layer.editType(k) != QgsVectorLayer.Hidden
-                    or self.exportHiddenAttributes
-                ]
-                data.append(values)
+            features = layer.getFeatures()
+        for feat in features:
+            # Get attribute data
+            values = [
+                self.displayAttributeValue(a) for i, a in enumerate(feat.attributes())
+                if layer.editorWidgetSetup(i).type() != 'Hidden'
+            ]
+            data.append(values)
 
         return data, nb
 
-
     def exportLayerToCsv(self, layer):
-        '''
+        """
         Exports the layer to CSV
-
-        '''
+        """
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         # Get layer data
@@ -468,13 +388,12 @@ class QuickExport(object):
 
         return msg, status
 
-
     def exportLayerToHtml(self, layer, ePath=None, cutPages=False):
-        '''
+        """
         Exports the layer to HTML
         using a template and reading the data
         from the selected layer
-        '''
+        """
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         # Read template file
@@ -496,8 +415,8 @@ class QuickExport(object):
         # Create thead with attribute names
         thead = '                <tr>\n'
         for field in fieldNames:
-            thead+= '                    <th>%s</th>\n' % field
-        thead+= '                </tr>\n\n'
+            thead += '                    <th>%s</th>\n' % field
+        thead += '                </tr>\n\n'
 
         # Create tbody content with feature attribute data
         tbody = ''
@@ -507,22 +426,22 @@ class QuickExport(object):
 
         # Write table content in HTML syntax
         for values in attrValues:
-            tbody+= '                <tr>\n'
-            tbody+= '                    <td>'
-            tbody+= '</td>\n                    <td>'.join(values)
-            tbody+= '                    </td>\n'
-            tbody+= '                </tr>\n\n'
-            i+=1
-            if i == self.maxLinesPerPage and cutPages and self.QgisVersion > 10900:
+            tbody += '                <tr>\n'
+            tbody += '                    <td>'
+            tbody += '</td>\n                    <td>'.join(values)
+            tbody += '                    </td>\n'
+            tbody += '                </tr>\n\n'
+            i += 1
+            if i == self.maxLinesPerPage and cutPages:
                 i = 0
-                tbody+= '</table>\n\n'
-                tbody+= '<span>Page %s</span>' % page
-                tbody+= '<div style="page-break-after:always;border: 0px solid white;"></div>\n\n'
-                tbody+= '<table><thead>' + thead + '</thead><tbody>'
-                page+=1
+                tbody += '</table>\n\n'
+                tbody += '<span>Page %s</span>' % page
+                tbody += '<div style="page-break-after:always;border: 0px solid white;"></div>\n\n'
+                tbody += '<table><thead>' + thead + '</thead><tbody>'
+                page += 1
 
         # Get creation date
-        locale.setlocale(locale.LC_TIME,'')
+        locale.setlocale(locale.LC_TIME, '')
         if hasattr(locale, 'nl_langinfo'):
             date_format = locale.nl_langinfo(locale.D_T_FMT)
         else:
@@ -540,12 +459,11 @@ class QuickExport(object):
         info = str(QApplication.translate("quickExport", "{} lines exported")).format(str(nb))
 
         # Adapt style if needed
-        style = ''
         # Get CSS style from table.css
         with open(self.cssPath, 'r') as content_file:
             style = content_file.read()
         if nbAttr > self.maxAttributesBeforeSmallFontSize:
-            style+= 'th, td {font-size:small;}'
+            style += 'th, td {font-size:small;}'
             self.maxLinesPerPage = 30
 
         # Replace values
@@ -583,16 +501,16 @@ class QuickExport(object):
 
         return msg, status
 
-
     def exportLayerToPdf(self, layer, doPrint=False):
-        '''
+        """
         Exports the layer to PDF
         First export to HTML then convert to PDF.
         If not output file given, send directly to the printer
-        '''
+        """
 
         # Create temporary file path
         temp = tempfile.NamedTemporaryFile()
+        # noinspection PyBroadException
         try:
             # Create temporary HTML file
             tPath = "%s.html" % temp.name
@@ -604,7 +522,7 @@ class QuickExport(object):
 
             # Print only when HTML content is loaded
             def printIt():
-                #~ web.show()
+                # web.show()
                 # Open the printer dialog if needed
                 if doPrint:
                     dialog = QPrintDialog()
@@ -624,8 +542,8 @@ class QuickExport(object):
                     printer.setOutputFileName(self.exportedFile)
 
                 # Set some metadata
-                printer.setCreator(u"QGIS - Plugin QuickExport")
-                printer.setDocName(u"Export - %s" % layer.title() and layer.title() or layer.name())
+                printer.setCreator("QGIS - Plugin QuickExport")
+                printer.setDocName("Export - %s" % layer.title() and layer.title() or layer.name())
 
                 # Print
                 web.print_(printer)
@@ -640,7 +558,7 @@ class QuickExport(object):
             # Only print when the HTML content has been loaded in the QWebView
             web.loadFinished[bool].connect(printIt)
 
-        except:
+        except Exception:
             msg = QApplication.translate("quickExport", "An error occured during layer export.")
             status = 'critical'
         finally:
@@ -649,42 +567,35 @@ class QuickExport(object):
             msg = QApplication.translate("quickExport", "The layer has been successfully exported.")
             status = 'info'
 
-
         return msg, status
 
-
     def openFile(self):
-        '''
+        """
         Opens a file with default system app
-        '''
+        """
         if sys.platform == "win32":
             os.startfile(self.exportedFile)
         else:
-            opener ="open" if sys.platform == "darwin" else "xdg-open"
+            opener = "open" if sys.platform == "darwin" else "xdg-open"
             subprocess.call([opener, self.exportedFile])
 
-
     def open_option_dialog(self):
-        '''
+        """
         Config dialog
-        '''
-        dialog = quickexport_option_dialog(self.iface)
+        """
+        dialog = QuickexportOptionDialog(self.iface)
         dialog.exec_()
-
 
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.mainWindow().removeToolBar(self.toolbar)
 
-
-
 # --------------------------------------------------------
 #        Option - Let the user configure options
 # --------------------------------------------------------
 
-from .quickexport_option_form import *
 
-class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
+class QuickexportOptionDialog(QDialog, Ui_quickexport_option_form):
     def __init__(self, iface):
         QDialog.__init__(self)
         self.iface = iface
@@ -705,12 +616,11 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
             3: ';'
         }
 
-
     def getValuesFromSettings(self):
-        '''
+        """
         Get values from QGIS Settings
         and apply them to dialog items
-        '''
+        """
         s = QSettings()
 
         # Export hidden attributes
@@ -721,24 +631,21 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
         # CSV delimiter
         csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
         if csvDelimiter:
-            delimiterRadioButtons =  self.gbDelimiter.findChildren(QtWidgets.QRadioButton)
+            delimiterRadioButtons = self.gbDelimiter.findChildren(QtWidgets.QRadioButton)
             for i, radio in enumerate(delimiterRadioButtons):
                 radio.setChecked(csvDelimiter == i)
 
-
-
     def onAccept(self):
-        '''
+        """
         Save options into QSettings when pressing OK button
-        '''
-
+        """
         s = QSettings()
 
         # Export hidden attributes
         s.setValue("quickexport/exportHiddenAttributes", self.cbExportHiddenAttributes.isChecked())
 
         # CSV delimiter
-        delimiterRadioButtons =  self.gbDelimiter.findChildren(QtWidgets.QRadioButton)
+        delimiterRadioButtons = self.gbDelimiter.findChildren(QtWidgets.QRadioButton)
         csvDelimiter = s.value("quickexport/csvDelimiter", 0, type=int)
         for i, radio in enumerate(delimiterRadioButtons):
             if radio.isChecked():
@@ -748,9 +655,8 @@ class quickexport_option_dialog(QDialog, Ui_quickexport_option_form):
         self.accept()
 
     def onReject(self):
-        '''
+        """
         Run some actions when
         the user closes the dialog
-        '''
-        string = "quickexport option dialog closed"
+        """
         self.close()
