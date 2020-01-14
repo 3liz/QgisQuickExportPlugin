@@ -37,7 +37,6 @@ from qgis.PyQt.QtWebKitWidgets import *
 from qgis.core import *
 
 from .quickexport_option_form import *
-from . import resource_rc
 
 
 class QuickExport:
