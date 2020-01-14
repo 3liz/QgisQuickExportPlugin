@@ -39,10 +39,12 @@ Some settings can be changed in the Options dialog, which can be opened via the 
 
 The Original Code is 3liz code.
 
-Compatibility with QGIS 1.8
-----------------------------
+Compatibility with old QGIS versions
+------------------------------------
 
-The plugin can be installed and used with QGIS 1.8 and above.
+The current version is compatible with QGIS 3.x.
+
+An old version of the plugin can be installed and used with QGIS 1.8 to 2.x.
 
 In QGIS 1.8, some features are a bit different :
 

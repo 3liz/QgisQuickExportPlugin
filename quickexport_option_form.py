@@ -7,7 +7,9 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt4 import QtCore, QtGui
+from __future__ import absolute_import
+from builtins import object
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -16,82 +18,82 @@ except AttributeError:
         return s
 
 try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QtWidgets.QApplication.translate(context, text, disambig)
 
 class Ui_quickexport_option_form(object):
     def setupUi(self, quickexport_option_form):
         quickexport_option_form.setObjectName(_fromUtf8("quickexport_option_form"))
         quickexport_option_form.resize(570, 242)
-        self.verticalLayout = QtGui.QVBoxLayout(quickexport_option_form)
+        self.verticalLayout = QtWidgets.QVBoxLayout(quickexport_option_form)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.scrollArea = QtGui.QScrollArea(quickexport_option_form)
+        self.scrollArea = QtWidgets.QScrollArea(quickexport_option_form)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName(_fromUtf8("scrollArea"))
-        self.scrollAreaWidgetContents = QtGui.QWidget()
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 222))
         self.scrollAreaWidgetContents.setObjectName(_fromUtf8("scrollAreaWidgetContents"))
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.groupBox_3 = QtGui.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox_3 = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
         self.groupBox_3.setObjectName(_fromUtf8("groupBox_3"))
-        self.verticalLayout_5 = QtGui.QVBoxLayout(self.groupBox_3)
+        self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.groupBox_3)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
-        self.gridLayout_2 = QtGui.QGridLayout()
+        self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
-        self.label_7 = QtGui.QLabel(self.groupBox_3)
+        self.label_7 = QtWidgets.QLabel(self.groupBox_3)
         self.label_7.setObjectName(_fromUtf8("label_7"))
         self.gridLayout_2.addWidget(self.label_7, 0, 0, 1, 1)
-        self.cbExportHiddenAttributes = QtGui.QCheckBox(self.groupBox_3)
+        self.cbExportHiddenAttributes = QtWidgets.QCheckBox(self.groupBox_3)
         self.cbExportHiddenAttributes.setText(_fromUtf8(""))
         self.cbExportHiddenAttributes.setObjectName(_fromUtf8("cbExportHiddenAttributes"))
         self.gridLayout_2.addWidget(self.cbExportHiddenAttributes, 0, 1, 1, 1)
         self.verticalLayout_5.addLayout(self.gridLayout_2)
         self.verticalLayout_2.addWidget(self.groupBox_3)
-        self.groupBox = QtGui.QGroupBox(self.scrollAreaWidgetContents)
+        self.groupBox = QtWidgets.QGroupBox(self.scrollAreaWidgetContents)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
-        self.verticalLayout_3 = QtGui.QVBoxLayout(self.groupBox)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.groupBox)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.gbDelimiter = QtGui.QGroupBox(self.groupBox)
+        self.gbDelimiter = QtWidgets.QGroupBox(self.groupBox)
         self.gbDelimiter.setTitle(_fromUtf8(""))
         self.gbDelimiter.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.gbDelimiter.setFlat(False)
         self.gbDelimiter.setCheckable(False)
         self.gbDelimiter.setObjectName(_fromUtf8("gbDelimiter"))
-        self.horizontalLayout = QtGui.QHBoxLayout(self.gbDelimiter)
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.gbDelimiter)
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setContentsMargins(-1, 0, -1, -1)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.label = QtGui.QLabel(self.gbDelimiter)
+        self.label = QtWidgets.QLabel(self.gbDelimiter)
         font = QtGui.QFont()
         font.setBold(True)
         font.setWeight(75)
         self.label.setFont(font)
         self.label.setObjectName(_fromUtf8("label"))
         self.horizontalLayout.addWidget(self.label)
-        self.rbDelimiterTab = QtGui.QRadioButton(self.gbDelimiter)
+        self.rbDelimiterTab = QtWidgets.QRadioButton(self.gbDelimiter)
         self.rbDelimiterTab.setChecked(True)
         self.rbDelimiterTab.setObjectName(_fromUtf8("rbDelimiterTab"))
         self.horizontalLayout.addWidget(self.rbDelimiterTab)
-        self.rbDelimiterComma = QtGui.QRadioButton(self.gbDelimiter)
+        self.rbDelimiterComma = QtWidgets.QRadioButton(self.gbDelimiter)
         self.rbDelimiterComma.setObjectName(_fromUtf8("rbDelimiterComma"))
         self.horizontalLayout.addWidget(self.rbDelimiterComma)
-        self.rbDelimiterPipe = QtGui.QRadioButton(self.gbDelimiter)
+        self.rbDelimiterPipe = QtWidgets.QRadioButton(self.gbDelimiter)
         self.rbDelimiterPipe.setObjectName(_fromUtf8("rbDelimiterPipe"))
         self.horizontalLayout.addWidget(self.rbDelimiterPipe)
-        self.rbDelimiterSemicolon = QtGui.QRadioButton(self.gbDelimiter)
+        self.rbDelimiterSemicolon = QtWidgets.QRadioButton(self.gbDelimiter)
         self.rbDelimiterSemicolon.setObjectName(_fromUtf8("rbDelimiterSemicolon"))
         self.horizontalLayout.addWidget(self.rbDelimiterSemicolon)
         self.verticalLayout_3.addWidget(self.gbDelimiter)
         self.verticalLayout_2.addWidget(self.groupBox)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem)
-        self.buttonBox = QtGui.QDialogButtonBox(self.scrollAreaWidgetContents)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self.scrollAreaWidgetContents)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.verticalLayout_2.addWidget(self.buttonBox)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
@@ -112,4 +114,4 @@ class Ui_quickexport_option_form(object):
         self.rbDelimiterPipe.setText(_translate("quickexport_option_form", "pipe", None))
         self.rbDelimiterSemicolon.setText(_translate("quickexport_option_form", "semicolon", None))
 
-import resource_rc
+from . import resource_rc

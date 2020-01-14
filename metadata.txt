@@ -10,8 +10,8 @@
 
 [general]
 name=Quick Export
-qgisMinimumVersion=1.8
-qgisMaximumVersion=2.99
+qgisMinimumVersion=3.0
+qgisMaximumVersion=3.99
 description=Quick Export adds a new toolbar in QGIS, with 4 actions to export any vector layer to CSV, HTML, PDF and printer.
 
 version=1.2
